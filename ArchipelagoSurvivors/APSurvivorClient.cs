@@ -187,18 +187,18 @@ public static class APSurvivorClient
     {
         NextSend = 3;
         Client?.SendLocations(ChecksToSend.ToArray());
-        Log.Msg($"Sent [{ChecksToSend.Count}] checks");
+        // Log.Msg($"Sent [{ChecksToSend.Count}] checks");
         ChecksToSend.Clear();
     }
 
     public static void AddLocationToQueue(string locationName)
     {
-        Log.Msg($"Try send check: [{locationName}]");
+        // Log.Msg($"Try send check: [{locationName}]");
         if (Client is null) return;
         if (Client.MissingLocations.All(kv => kv.Value.LocationName != locationName)) return;
         var location = Client.MissingLocations.First(kv => kv.Value.LocationName == locationName).Key;
         if (ChecksToSendQueue.Contains(location)) return;
         ChecksToSendQueue.Enqueue(location);
-        Log.Msg($"Send check: [{locationName}]");
+        // Log.Msg($"Send check: [{locationName}]");
     }
 }
