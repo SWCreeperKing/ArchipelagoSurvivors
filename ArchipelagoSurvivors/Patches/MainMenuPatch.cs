@@ -1,4 +1,6 @@
 using HarmonyLib;
+using Il2CppDreamteck.Splines.Primitives;
+using Il2CppTMPro;
 using Il2CppVampireSurvivors;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Data.Enemies;
@@ -23,7 +25,14 @@ public static class MainMenuPatch
         // GM.Core.Player.die;
 
         var container = __instance.GetChild(2);
-        // StartButton = container.GetChild(0);
+        StartButton = container.GetChild(0);
+
+        if (Random.Shared.Next(100) == 42)
+        {
+            StartButton.GetChild(0).GetComponent<TextMeshProUGUI>().text = "FISH";
+            Log.Msg("FISH");
+        }
+        
         container.GetChild(1).AddComponent<Invisinator>(); // quick start button
         container.GetChild(12).AddComponent<Invisinator>(); // adventure button
         __instance.gameObject.AddComponent<APGui>();
@@ -31,20 +40,20 @@ public static class MainMenuPatch
         // __instance.GetParent().GetChild(11).AddComponent<Testing2>();
     }
 
-    [HarmonyPatch(typeof(EnemyItemUI), "SetData"), HarmonyPrefix]
-    public static void BeforeBestiarySetData(EnemyItemUI __instance, EnemyType type, int count, EnemyData dat,
-        BestiaryPage page, ref bool hasKilled)
-    {
-        hasKilled = true;
-    }
-    
-    [HarmonyPatch(typeof(EnemyItemUI), "SetData"), HarmonyPostfix]
-    public static void BestiarySetData(EnemyItemUI __instance, EnemyType type, int count, EnemyData dat,
-        BestiaryPage page, bool hasKilled)
-    {
-        Log.Msg($"[{type}] [{__instance._Name.text}]");
-        __instance._Name.text = $"[{Random.Shared.Next(1000):###,###}/1,000] {__instance._Name.text}";
-    }
+    // [HarmonyPatch(typeof(EnemyItemUI), "SetData"), HarmonyPrefix]
+    // public static void BeforeBestiarySetData(EnemyItemUI __instance, EnemyType type, int count, EnemyData dat,
+    //     BestiaryPage page, ref bool hasKilled)
+    // {
+    //     hasKilled = true;
+    // }
+    //
+    // [HarmonyPatch(typeof(EnemyItemUI), "SetData"), HarmonyPostfix]
+    // public static void BestiarySetData(EnemyItemUI __instance, EnemyType type, int count, EnemyData dat,
+    //     BestiaryPage page, bool hasKilled)
+    // {
+    //     Log.Msg($"[{type}] [{__instance._Name.text}]");
+    //     __instance._Name.text = $"[{Random.Shared.Next(1000):###,###}/1,000] {__instance._Name.text}";
+    // }
 }
 
 // [RegisterTypeInIl2Cpp]

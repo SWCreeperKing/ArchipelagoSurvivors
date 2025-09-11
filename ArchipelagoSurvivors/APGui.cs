@@ -149,7 +149,11 @@ public class APGui : MonoBehaviour
         {
             Disconnect();
         }
+        
+        GUI.Label(new Rect(20 + Offset.x, 240 + Offset.y, 300, 30),
+            State != "" ? State : IsConnected() ? "Connected" : "Not Connected",
+            IsConnected() ? TextStyleGreen : TextStyleRed);
     }
 
-    private void Update() => APSurvivorClient.Update();
+    // private void Update() => APSurvivorClient.Update();
 }

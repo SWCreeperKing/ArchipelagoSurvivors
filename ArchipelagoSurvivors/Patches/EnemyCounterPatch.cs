@@ -11,8 +11,8 @@ public static class EnemyCounterPatch
     [HarmonyPatch(typeof(EnemyController), "Die"), HarmonyPostfix]
     public static void Count(EnemyController __instance)
     {
-        // if (!KillCounter.ContainsKey(__instance._enemyType)) KillCounter[__instance._enemyType] = 0;
-        //
-        // Core.Log.Msg($" == ENEMY DIED <{__instance._enemyType}> [{KillCounter[__instance._enemyType] += 1}] == ");
+        if (!KillCounter.ContainsKey(__instance._enemyType)) KillCounter[__instance._enemyType] = 0;
+        
+        Core.Log.Msg($" == ENEMY DIED <{__instance._enemyType}> [{KillCounter[__instance._enemyType] += 1}] == ");
     }
 }

@@ -502,16 +502,13 @@
 		<Compile Include="APSurvivorClient.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="Helper.cs" />
+		<Compile Include="InformationTransformer.cs" />
 		<Compile Include="Invisinator.cs" />
 		<Compile Include="Patches\ChestPickupPatch.cs" />
 		<Compile Include="Patches\EnemyCounterPatch.cs" />
 		<Compile Include="Patches\MainMenuPatch.cs" />
 		<Compile Include="Patches\PlayerPatch.cs" />
 		<Compile Include="Patches\SurvivorScreenPatch.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Lib\" />
 	</ItemGroup>
     
     <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
