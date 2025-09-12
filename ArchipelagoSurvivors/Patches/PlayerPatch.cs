@@ -15,20 +15,25 @@ public class PlayerPatch
 {
     public static List<StageType> StagesBeaten = [];
     public static List<CharacterType> CharactersBeaten = [];
-    public static int LastMinuteBarrier = 0;
+    public static int LastMinuteBarrier = -1;
 
     [HarmonyPatch(typeof(CharacterController), "OnUpdate"), HarmonyPostfix]
     public static void OnUpdate(CharacterController __instance)
     {
         var currentMinute = GM.Core.Stage.CurrentMinute;
-        // Log.Msg($"[{GM.Core.Stage.CurrentMinute}] [{GM.Core.Stage._maxStageDataMinute}]");
 
-        if (LastMinuteBarrier <= currentMinute)
+        if (LastMinuteBarrier == -1)
+        {
+            LastMinuteBarrier = 0;
+            Log.Msg($"stage loop time: [{GM.Core.Stage._maxStageDataMinute}]");
+        }
+
+        if (LastMinuteBarrier <= currentMinute || GM.Core.Stage._maxStageDataMinute <= currentMinute)
         {
             LastMinuteBarrier = currentMinute;
             return;
         }
-        
+
         if (Client is null) return;
         // Log.Msg("Check minute update from character");
 
@@ -37,7 +42,8 @@ public class PlayerPatch
             Log.Msg("beat with check");
             AddLocationToQueue($"Beat with {CharacterTypeToName[__instance.CharacterType]}");
             CharactersBeaten.Add(__instance.CharacterType);
-            Client.SendToStorage("characters_completed", CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray());
+            Client.SendToStorage("characters_completed",
+                CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray());
         }
 
         if (!StagesBeaten.Contains(GM.Core.Stage.StageType))

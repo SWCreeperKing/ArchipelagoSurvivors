@@ -7,6 +7,8 @@
 
 ## Features/Information
 
+- Goal:
+  - Loop all stages
 - Mods do not work on the beta, so make sure to back up your beta save if you went into the beta
 - Controller navigation is broken in character/stage selection
   - cry about it, too lazy to figure out how to fix 
