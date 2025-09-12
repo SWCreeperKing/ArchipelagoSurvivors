@@ -1,3 +1,9 @@
+# v.0.1.2
+
+- [ApWorld] Fixed logic bug with region access
+
+---
+
 # v.0.1.1
 
 - [Client] fixed a bug that prevented stage checks from sending when looping/beating them
