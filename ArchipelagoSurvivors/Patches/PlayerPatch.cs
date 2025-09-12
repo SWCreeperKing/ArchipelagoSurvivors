@@ -3,6 +3,7 @@ using Il2CppSystem.Text;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.Framework.Saves;
+using Il2CppVampireSurvivors.Objects;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
 using static ArchipelagoSurvivors.InformationTransformer;
@@ -14,23 +15,34 @@ public class PlayerPatch
 {
     public static List<StageType> StagesBeaten = [];
     public static List<CharacterType> CharactersBeaten = [];
-    
+    public static int LastMinuteBarrier = 0;
+
     [HarmonyPatch(typeof(CharacterController), "OnUpdate"), HarmonyPostfix]
     public static void OnUpdate(CharacterController __instance)
     {
+        var currentMinute = GM.Core.Stage.CurrentMinute;
         // Log.Msg($"[{GM.Core.Stage.CurrentMinute}] [{GM.Core.Stage._maxStageDataMinute}]");
 
-        if (GM.Core.Stage.CurrentMinute < GM.Core.Stage._maxStageDataMinute) return;
-        if (Client is null) return;
+        if (LastMinuteBarrier <= currentMinute)
+        {
+            LastMinuteBarrier = currentMinute;
+            return;
+        }
         
+        if (Client is null) return;
+        // Log.Msg("Check minute update from character");
+
         if (!CharactersBeaten.Contains(__instance.CharacterType))
         {
+            Log.Msg("beat with check");
             AddLocationToQueue($"Beat with {CharacterTypeToName[__instance.CharacterType]}");
             CharactersBeaten.Add(__instance.CharacterType);
+            Client.SendToStorage("characters_completed", CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray());
         }
 
         if (!StagesBeaten.Contains(GM.Core.Stage.StageType))
         {
+            Log.Msg("beaten check");
             AddLocationToQueue($"{GM.Core.Stage.StageType} Beaten");
             StagesBeaten.Add(GM.Core.Stage.StageType);
             Client.SendToStorage("levels_completed", StagesBeaten.Select(st => StageTypeToName[st]).ToArray());
@@ -38,28 +50,28 @@ public class PlayerPatch
             Client.Goal();
         }
     }
-    
+
     // [HarmonyPatch(typeof(CharacterController), "InitCharacter"),
     //  HarmonyPostfix]
     // public static void Init(CharacterController __instance,
     //     CharacterType characterType, int playerIndex, bool dontGetCharacterDataForCurrentLevel)
     // {
-        // __instance.MaxWeaponCount = 1;
-        // Log.Msg($"[{__instance.Magnet}] [{__instance.MaxAccessoryCount}] + [{__instance.MaxAccessoryBonus}]");
+    // __instance.MaxWeaponCount = 1;
+    // Log.Msg($"[{__instance.Magnet}] [{__instance.MaxAccessoryCount}] + [{__instance.MaxAccessoryBonus}]");
 
-        // __instance.weaponSelection
-        
-        // StringBuilder sb = new();
-        //
-        // foreach (var weapon in PhaserSaveDataUtils.LoadSaveFiles().sealed)
-        // {
-        //     Log.Msg(weapon);
-        // }
-        //
-        // Log.Msg(sb.ToString());
+    // __instance.weaponSelection
 
-        // GM.Core.IsWeaponTypeAvailable();
-        // var banishedWeapons = GM.Core.LevelUpFactory.BanishedWeapons;
+    // StringBuilder sb = new();
+    //
+    // foreach (var weapon in PhaserSaveDataUtils.LoadSaveFiles().sealed)
+    // {
+    //     Log.Msg(weapon);
+    // }
+    //
+    // Log.Msg(sb.ToString());
+
+    // GM.Core.IsWeaponTypeAvailable();
+    // var banishedWeapons = GM.Core.LevelUpFactory.BanishedWeapons;
     // }
 
     // [HarmonyPatch(typeof(LevelUpFactory), "BanishedSealedWeapons"), HarmonyPrefix]

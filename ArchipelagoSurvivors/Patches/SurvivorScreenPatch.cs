@@ -2,7 +2,9 @@ using HarmonyLib;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.UI;
 using UnityEngine;
+using UnityEngine.UI;
 using static ArchipelagoSurvivors.APSurvivorClient;
+using static ArchipelagoSurvivors.Patches.PlayerPatch;
 using Il2CppGeneric = Il2CppSystem.Collections.Generic;
 
 namespace ArchipelagoSurvivors.Patches;
@@ -41,6 +43,11 @@ public static class SurvivorScreenPatch
         {
             ChestPickupPatch.ChestsOpened = 0;
         }
+
+        if (LastMinuteBarrier != 0)
+        {
+            LastMinuteBarrier = 0;
+        }
         
         EggController.Update();
 
@@ -48,6 +55,7 @@ public static class SurvivorScreenPatch
         foreach (var (character, ui) in __instance._characterItemUIs)
         {
             ui.gameObject.SetActive(AllowedCharacters.Contains(character));
+            ui.GetChild(3).GetComponent<Image>().enabled = !CharactersBeaten.Contains(character);
         }
     }
 
@@ -97,6 +105,7 @@ public static class SurvivorScreenPatch
             // ui.gameObject.SetActive(AllowedStages.Contains(stage));
             // gobj.SetActive(AllowedStages.Contains(stage.Type));
             stage.gameObject.SetActive(AllowedStages.Contains(stage.Type));
+            stage.GetChild(5).SetActive(!StagesBeaten.Contains(stage.Type));
         }
     }
 }

@@ -20,7 +20,7 @@ public static class ChestPickupPatch
         StageTreasureTracker.TryAdd(stageType, 0);
         ChestsOpened++;
 
-        if (StageTreasureTracker[stageType] >= ChestsOpened || StageTreasureTracker[stageType] >= 10) return;
+        if (StageTreasureTracker[stageType] >= ChestsOpened || StageTreasureTracker[stageType] >= ChestCheckAmount) return;
         StageTreasureTracker[stageType]++;
         AddLocationToQueue($"Open Chest #{ChestsOpened} on {StageTypeToName[stageType]}");
     }

@@ -24,6 +24,7 @@ public static class APSurvivorClient
     public static bool IsHurryLocked = false;
     public static bool IsArcanasLocked = false;
     public static bool IsEggesLocked = false;
+    public static long ChestCheckAmount;
 
     public static string[]? TryConnect(int port, string slot, string address, string password)
     {
@@ -78,10 +79,12 @@ public static class APSurvivorClient
             IsHurryLocked = (bool)slotdata["is_hurry_locked"];
             IsArcanasLocked = (bool)slotdata["is_arcanas_locked"];
             IsEggesLocked = (long)slotdata["egg_inclusion"] != 2;
+            ChestCheckAmount = (long)slotdata["chest_checks_per_stage"];
             
             AllowedStages.Add(StartingStage);
             AllowedCharacters.Add(StartingCharacter);
 
+            CharactersBeaten = Client!.GetFromStorage<string[]>("characters_completed", def: []).Select(s => CharacterNameToType[s]).ToList();
             StagesBeaten = Client!.GetFromStorage<string[]>("levels_completed", def: []).Select(s => StageNameToType[s]).ToList();
         }
         catch (Exception e)
@@ -199,6 +202,6 @@ public static class APSurvivorClient
         var location = Client.MissingLocations.First(kv => kv.Value.LocationName == locationName).Key;
         if (ChecksToSendQueue.Contains(location)) return;
         ChecksToSendQueue.Enqueue(location);
-        // Log.Msg($"Send check: [{locationName}]");
+        Log.Msg($"Send check: [{locationName}]");
     }
 }
