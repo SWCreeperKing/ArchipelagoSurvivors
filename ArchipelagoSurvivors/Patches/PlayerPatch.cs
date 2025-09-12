@@ -28,7 +28,7 @@ public class PlayerPatch
             Log.Msg($"stage loop time: [{GM.Core.Stage._maxStageDataMinute}]");
         }
 
-        if (LastMinuteBarrier <= currentMinute || GM.Core.Stage._maxStageDataMinute <= currentMinute)
+        if (LastMinuteBarrier <= currentMinute && GM.Core.Stage._maxStageDataMinute > currentMinute)
         {
             LastMinuteBarrier = currentMinute;
             return;
@@ -49,7 +49,7 @@ public class PlayerPatch
         if (!StagesBeaten.Contains(GM.Core.Stage.StageType))
         {
             Log.Msg("beaten check");
-            AddLocationToQueue($"{GM.Core.Stage.StageType} Beaten");
+            AddLocationToQueue($"{StageTypeToName[GM.Core.Stage.StageType]} Beaten");
             StagesBeaten.Add(GM.Core.Stage.StageType);
             Client.SendToStorage("levels_completed", StagesBeaten.Select(st => StageTypeToName[st]).ToArray());
             if (StagesBeaten.Count != StagesToBeat.Length || Client.HasGoaled) return;

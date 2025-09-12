@@ -86,6 +86,11 @@ public static class APSurvivorClient
 
             CharactersBeaten = Client!.GetFromStorage<string[]>("characters_completed", def: []).Select(s => CharacterNameToType[s]).ToList();
             StagesBeaten = Client!.GetFromStorage<string[]>("levels_completed", def: []).Select(s => StageNameToType[s]).ToList();
+
+            foreach (var stage in StagesBeaten)
+            {
+                AddLocationToQueue($"{StageTypeToName[stage]} Beaten");
+            }
         }
         catch (Exception e)
         {
