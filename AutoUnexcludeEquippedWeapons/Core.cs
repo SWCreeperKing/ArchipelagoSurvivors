@@ -45,15 +45,11 @@ public static class WeaponPatch
         };
         
         if (signalClass == "") return;
-        
-        var realWeaponType = (GameplaySignals.WeaponAddedToCharacterSignal)signal;
-        Log.Msg($"weapon: [{realWeaponType.Weapon}]");
-        
         var weaponType = FindAndParse(JsonUtility.ToJson(signal), signalClass);
         GM.Core.LevelUpFactory.ExcludedWeapons.Remove(weaponType);
         GM.Core.LevelUpFactory.BanishedWeapons.Remove(weaponType);
     }
-
+ 
     public static WeaponType FindAndParse(string json, string text)
     {
         var weaponIndex = json.IndexOf(text, StringComparison.Ordinal) + text.Length + 2;
