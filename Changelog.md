@@ -1,3 +1,9 @@
+# v.0.?.?
+
+- [ApWorld] Added "Random" option to characters and stages
+
+---
+
 # v.0.1.2
 
 - [ApWorld] Fixed logic bug with region access
