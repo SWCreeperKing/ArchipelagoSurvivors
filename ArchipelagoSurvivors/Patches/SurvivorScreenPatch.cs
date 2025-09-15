@@ -14,26 +14,17 @@ public static class SurvivorScreenPatch
     public static List<CharacterType> AllowedCharacters = [];
     public static List<StageType> AllowedStages = [];
 
-    // public static Il2CppGeneric.Dictionary<CharacterType, CharacterItemUI> CharacterList;
-    // public static Il2CppGeneric.Dictionary<StageType, StageItemUI> StageList = new();
-
     public static TickBoxController EggController;
     public static TickBoxController HyperController;
     public static TickBoxController HurryController;
 
     public static TickBoxController ArcaneController;
-    // public static TickBoxController LimitController;
-    // public static TickBoxController InverseController;
-    // public static TickBoxController EndlessController;
-    // public static TickBoxController RandEventsController;
-    // public static TickBoxController RandLevelsController;
 
     [HarmonyPatch(typeof(CharacterSelectionPage), "Start"), HarmonyPostfix]
     public static void OverrideCharacterStart(CharacterSelectionPage __instance)
     {
         EggController = __instance.GetChild(5).GetChild(0);
         EggController.VariableTracker = "eggs";
-        // CharacterList = __instance._characterItemUIs;
     }
 
     [HarmonyPatch(typeof(CharacterSelectionPage), "Update"), HarmonyPostfix]
@@ -51,7 +42,6 @@ public static class SurvivorScreenPatch
         
         EggController.Update();
 
-        // foreach (var (character, ui) in CharacterList)
         foreach (var (character, ui) in __instance._characterItemUIs)
         {
             ui.gameObject.SetActive(AllowedCharacters.Contains(character));
@@ -69,20 +59,6 @@ public static class SurvivorScreenPatch
         HurryController.VariableTracker = "hurry";
         ArcaneController = infoBox[4];
         ArcaneController.VariableTracker = "arcanas";
-        // LimitController = infoBox[5];
-        // InverseController = infoBox[7];
-        // EndlessController = infoBox[8];
-
-        // var randomizeBox = __instance.GetChild(11).GetChild(1).GetChildren();
-        // RandEventsController = randomizeBox[0];
-        // RandLevelsController = randomizeBox[1];
-
-        // var list = __instance.GetChild(0).GetChild(1).GetChild(0).GetChild(0);
-        // foreach (var child in list.GetChildren())
-        // {
-        //     var stage = child.GetComponent<StageItemUI>();
-        //     StageList[stage.Type] = stage;
-        // }
     }
 
     [HarmonyPatch(typeof(StageSelectPage), "Update"), HarmonyPostfix]
@@ -91,19 +67,9 @@ public static class SurvivorScreenPatch
         HyperController.Update();
         HurryController.Update();
         ArcaneController.Update();
-        // LimitController.Update();
-        // InverseController.Update();
-        // EndlessController.Update();
-        // RandEventsController.Update();
-        // RandLevelsController.Update();
-
-        // foreach (var (stage, ui) in StageList)
-        // foreach (var gobj in __instance.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetChildren())
+        
         foreach (var stage in __instance.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetComponentsInChildren<StageItemUI>())
         {
-            // var stage = gobj.GetComponent<StageItemUI>();
-            // ui.gameObject.SetActive(AllowedStages.Contains(stage));
-            // gobj.SetActive(AllowedStages.Contains(stage.Type));
             stage.gameObject.SetActive(AllowedStages.Contains(stage.Type));
             stage.GetChild(5).SetActive(!StagesBeaten.Contains(stage.Type));
         }
@@ -124,7 +90,6 @@ public class TickBoxController
             _ => false
         };
     
-    // public bool ForceEnableWhenEnabled; // trap maybe???
     private TickBoxUI Box = null;
     private GameObject Gobj = null;
 
@@ -136,15 +101,10 @@ public class TickBoxController
 
     public void Update()
     {
-        if ( /*!ForceEnableWhenEnabled &&*/ !Enabled && Box.isOn)
+        if (!Enabled && Box.isOn)
         {
             Box.isOn = false;
         }
-
-        // if (ForceEnableWhenEnabled && Enabled != Box.isOn)
-        // {
-        //     Box.isOn = Enabled;
-        // }
 
         if (Enabled != Gobj.activeSelf)
         {

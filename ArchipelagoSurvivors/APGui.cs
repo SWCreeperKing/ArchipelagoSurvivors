@@ -68,23 +68,6 @@ public class APGui : MonoBehaviour
         {
             DeathlinkToggleTimer -= Time.deltaTime;
         }
-        
-        // if (Plugin.IsDebug is Plugin.DebugWant.Washables)
-        // {
-        //     if (GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 300, 30), "Save Washables"))
-        //     {
-        //         File.WriteAllText($"{Plugin.ModDir}/Locations.txt",
-        //             string.Join("\n", CleanParts.Select(kv => $"{kv.Key}:{string.Join(",", kv.Value)}")));
-        //
-        //         File.WriteAllText("ApworldLocations.py",
-        //             $"raw_objectsanity_dict = {{\n{string.Join("\n", CleanParts.Select(kv => $"\t\"{SceneNameToLocationName[kv.Key]}\": [{string.Join(",", kv.Value.Select(v => $"\"{v}\""))}],"))}\n}}");
-        //
-        //         File.WriteAllText("RawLocationNames.txt",
-        //             string.Join("\n", CleanParts.Select(kv => SceneNameToLocationName[kv.Key])));
-        //     }
-        //
-        //     return;
-        // }
 
         if (!ShowGUI) return;
 
@@ -150,6 +133,4 @@ public class APGui : MonoBehaviour
             State != "" ? State : IsConnected() ? "Connected" : "Not Connected",
             IsConnected() ? TextStyleGreen : TextStyleRed);
     }
-
-    // private void Update() => APSurvivorClient.Update();
 }

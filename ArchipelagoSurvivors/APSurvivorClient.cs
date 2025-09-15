@@ -114,7 +114,7 @@ public static class APSurvivorClient
 
                 var person = packet.Data.TryGetValue("source", out var source) ? source.ToString() : "Unknown";
                 if (person == Client.PlayerName) return;
-                
+
                 Log.Msg(
                     $"Received Deathlink from [{person}] for \n[{(packet.Data.TryGetValue("source", out var cause) ? cause : "Unknown Reason")}]");
 
@@ -123,7 +123,7 @@ public static class APSurvivorClient
                     Log.Msg("Deathlink was parried by pause (DON'T ABUSE)");
                     return;
                 }
-                
+
                 if (DeathlinkCooldown > 0)
                 {
                     Log.Msg("Deathlink on cooldown");
@@ -131,42 +131,15 @@ public static class APSurvivorClient
                 }
 
                 DeathlinkCooldown = 4;
-                
-                DeathIsQueued = true;
-                try
-                {
-                    GM.Core.Player.Kill();
-                }
-                catch
-                {
-                }
+                GM.Core.Player.Kill();
             };
         }
         catch (Exception e)
         {
             Log.Error(e);
         }
-        // var startingLocation = (string)slotdata["starting_location"]!;
-        // WinCondition = (long)slotdata["jobs_done"];
-        // if (slotdata.TryGetValue("percentsanity", out var temp)) Percentsanity = (bool)temp;
-        // if (slotdata.TryGetValue("objectsanity", out var temp1)) Objectsanity = (bool)temp1;
-        //
-        // if (slotdata.TryGetValue("goal_levels", out var temp3))
-        // {
-        //     Levels = ((string)temp3).Split(',').Select(s => s.Trim('\'', '[', ']', ' ', '"')).ToArray();
-        // }
-        //
-        // if (slotdata.TryGetValue("goal_level_amount", out var temp4)) LevelCount = (long)temp4;
-        // if (LevelCount == 0) LevelCount = Levels.Length;
-        //
-        // Goal = Levels.Any() && Levels[0] != "None" ? GoalType.LevelHunt : GoalType.McGuffinHunt;
-        // // Plugin.Log.LogInfo($"[{Goal}] | [{string.Join(", ", Levels)}] | [{startingLocation}]");
-        //
-        // Allowed = [LevelUnlockDictionary[$"{startingLocation} Unlock"]];
-        // Jobs = 0;
 
         Log.Msg("Connnected");
-        // GoalLevelCheck(Client!.GetFromStorage<string[]>("levels_completed", def: [])!);
     }
 
     public static bool IsConnected()
@@ -181,7 +154,7 @@ public static class APSurvivorClient
         if (Client?.Session?.Socket is null || !Client.IsConnected) return;
 
         NextSend -= Time.deltaTime;
-        if (DeathlinkCooldown > 0) DeathlinkCooldown -= Time.deltaTime; 
+        if (DeathlinkCooldown > 0) DeathlinkCooldown -= Time.deltaTime;
         if (ChecksToSend.Any() && NextSend <= 0)
         {
             SendChecks();
@@ -220,18 +193,6 @@ public static class APSurvivorClient
                         break;
                 }
             }
-
-            // Jobs += newItems.Count(item => item == "A Job Well Done");
-            // var newAllowed = newItems.Where(item => item.EndsWith(" Unlock"))
-            //                          .Select(item => LevelUnlockDictionary[item])
-            //                          .ToArray();
-            //
-            // if (newAllowed.Any())
-            // {
-            //     Allowed.AddRange(newAllowed);
-            //     Plugin.Log.LogInfo($"Unlocked: [{string.Join(", ", newAllowed)}]");
-            //     UpdateAvailableLevelGoal();
-            // }
         }
 
         while (!ChecksToSendQueue.IsEmpty)
@@ -239,22 +200,17 @@ public static class APSurvivorClient
             ChecksToSendQueue.TryDequeue(out var location);
             ChecksToSend.Add(location);
         }
-
-        // if (Jobs < WinCondition) return;
-        // Client.Goal();
     }
 
     private static void SendChecks()
     {
         NextSend = 3;
         Client?.SendLocations(ChecksToSend.ToArray());
-        // Log.Msg($"Sent [{ChecksToSend.Count}] checks");
         ChecksToSend.Clear();
     }
 
     public static void AddLocationToQueue(string locationName)
     {
-        // Log.Msg($"Try send check: [{locationName}]");
         if (Client is null) return;
         if (Client.MissingLocations.All(kv => kv.Value.LocationName != locationName)) return;
         var location = Client.MissingLocations.First(kv => kv.Value.LocationName == locationName).Key;
