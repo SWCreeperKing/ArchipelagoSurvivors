@@ -3,12 +3,12 @@ using Il2CppNewtonsoft.Json;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.Objects.Characters;
-using Il2CppVampireSurvivors.Signals;
 using Il2CppZenject;
 using MelonLoader;
 using Microsoft.VisualBasic;
 using UnityEngine;
 using static AutoUnexcludeEquippedWeapons.Core;
+using static Il2CppVampireSurvivors.Signals.GameplaySignals;
 using Action = Il2CppSystem.Action;
 
 [assembly:
@@ -37,23 +37,19 @@ public static class WeaponPatch
     [HarmonyPatch(typeof(SignalBus), "InternalFire"), HarmonyPrefix]
     public static void MonitorAllSignals(Il2CppSystem.Type signalType, Il2CppSystem.Object signal)
     {
-        var signalClass = signalType.Name switch
+        var weaponType = signalType.Name switch
         {
-            "WeaponAddedToCharacterSignal" => "Weapon",
-            "AccessoryAddedToCharacterSignal" => "Accessory",
-            _ => ""
+            "WeaponAddedToCharacterSignal" => new WeaponAddedToCharacterSignal(signal.Pointer).Weapon,
+            "AccessoryAddedToCharacterSignal" => new AccessoryAddedToCharacterSignal(signal.Pointer).Accessory,
+            _ => WeaponType.VOID
         };
+
+        if (weaponType == 0) return;
+        if (!GM.Core.LevelUpFactory.BanishedWeapons.Contains(weaponType)) return;
+
+        Log.Msg($"Unsealing/Unbanishing [{signalType.Name.Replace("AddedToCharacterSignal", "")}] [{weaponType}]");
         
-        if (signalClass == "") return;
-        var weaponType = FindAndParse(JsonUtility.ToJson(signal), signalClass);
         GM.Core.LevelUpFactory.ExcludedWeapons.Remove(weaponType);
         GM.Core.LevelUpFactory.BanishedWeapons.Remove(weaponType);
-    }
- 
-    public static WeaponType FindAndParse(string json, string text)
-    {
-        var weaponIndex = json.IndexOf(text, StringComparison.Ordinal) + text.Length + 2;
-        var weaponEnd = json.IndexOf('"', weaponIndex) - 1;
-        return (WeaponType)int.Parse(json[weaponIndex..weaponEnd]);
     }
 }

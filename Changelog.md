@@ -1,6 +1,11 @@
-# v.0.?.?
+# v.0.1.3
 
 - [ApWorld] Added "Random" option to characters and stages
+- [Client] Added DeathLink 
+  - can be enabled/disabled on the main menu
+  - pausing can block deathlinks (this is to prevent crashes, please do not abuse)
+  - you can not receive a deathlink within 4s of another
+- [Client] Included a QoL mod, see readme
 
 ---
 

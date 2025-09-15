@@ -22,6 +22,7 @@ public class APGui : MonoBehaviour
     public static string State = "";
     public static Vector2 Offset = new(100, 100);
     private static double TimeAccumulator;
+    private static double DeathlinkToggleTimer;
 
     public static GUIStyle TextStyle = new()
     {
@@ -62,6 +63,12 @@ public class APGui : MonoBehaviour
     void OnGUI()
     {
         TimeAccumulator += Time.deltaTime;
+
+        if (DeathlinkToggleTimer > 0)
+        {
+            DeathlinkToggleTimer -= Time.deltaTime;
+        }
+        
         // if (Plugin.IsDebug is Plugin.DebugWant.Washables)
         // {
         //     if (GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 300, 30), "Save Washables"))
@@ -97,25 +104,14 @@ public class APGui : MonoBehaviour
         else
         {
             GUI.Box(new Rect(10 + Offset.x, 10 + Offset.y + 100, 200, 150), "AP Client");
-//             if (Goal is GoalType.McGuffinHunt)
-//             {
-//                 var hasGoal = Jobs >= WinCondition;
-//                 GUI.Label(new Rect(20 + Offset.x, Offset.y + 155, 150, 35),
-//                     $"[A Job Well Done] mcguffins:\n    {Jobs} / {WinCondition}",
-//                     hasGoal ? TextStyleGreen : TextStyleRed);
-//             }
-//             else if (GoalLevelsOpen.Any())
-//             {
-//                 var sixtySecondBarrier = Math.Floor(TimeAccumulator / 30);
-//                 var index = (int)(sixtySecondBarrier % GoalLevelsOpen.Length);
-//
-//                 GUI.Label(new Rect(20 + Offset.x, Offset.y + 150, 150, 35),
-//                     $"""
-//                      Req. Completed Levels: ({CompletedLevelCount}/{LevelCount})
-//                      Levels of interest ({index + 1}/{GoalLevelsOpen.Length}):
-//                      [{GoalLevelsOpen[index]}]
-//                      """, TextStyle);
-//             }
+            if (DeathlinkToggleTimer <= 0 && GUI.Button(new Rect(10 + Offset.x, 10 + Offset.y + 130, 200, 50), "Toggle Deathlink"))
+            {
+                DeathlinkToggleTimer = 3;
+                ToggleDeathlink();
+            }
+
+            GUI.Label(new Rect(10 + Offset.x, 10 + Offset.y + 180, 200, 50),
+                DeathLink ? "Deathlink is enabled" : "Deathlink is disabled", TextStyle);
         }
 
         if (MainMenuPatch.StartButton is not null)
@@ -149,7 +145,7 @@ public class APGui : MonoBehaviour
         {
             Disconnect();
         }
-        
+
         GUI.Label(new Rect(20 + Offset.x, 240 + Offset.y, 300, 30),
             State != "" ? State : IsConnected() ? "Connected" : "Not Connected",
             IsConnected() ? TextStyleGreen : TextStyleRed);

@@ -13,9 +13,20 @@ namespace ArchipelagoSurvivors.Patches;
 
 public class PlayerPatch
 {
+    public static string[] DeathlinkMessages =
+    [
+        "Couldn't handle the pressure",
+        "Didn't garlic enough",
+        "Victory was in another coffin",
+        "Ran out of Tirajisú",
+        "Ran out of floor chicken",
+        "Fell into death's hands",
+    ];
+
     public static List<StageType> StagesBeaten = [];
     public static List<CharacterType> CharactersBeaten = [];
     public static int LastMinuteBarrier = -1;
+    public static bool DeathIsQueued;
 
     [HarmonyPatch(typeof(CharacterController), "OnUpdate"), HarmonyPostfix]
     public static void OnUpdate(CharacterController __instance)
@@ -57,28 +68,42 @@ public class PlayerPatch
         }
     }
 
-    // [HarmonyPatch(typeof(CharacterController), "InitCharacter"),
-    //  HarmonyPostfix]
-    // public static void Init(CharacterController __instance,
-    //     CharacterType characterType, int playerIndex, bool dontGetCharacterDataForCurrentLevel)
-    // {
-    // __instance.MaxWeaponCount = 1;
-    // Log.Msg($"[{__instance.Magnet}] [{__instance.MaxAccessoryCount}] + [{__instance.MaxAccessoryBonus}]");
+    [HarmonyPatch(typeof(CharacterController), "InitCharacter"),
+     HarmonyPostfix]
+    public static void Init(CharacterController __instance,
+        CharacterType characterType, int playerIndex, bool dontGetCharacterDataForCurrentLevel)
+    {
+        DeathIsQueued = false;
+        // __instance.MaxWeaponCount = 1;
+        // Log.Msg($"[{__instance.Magnet}] [{__instance.MaxAccessoryCount}] + [{__instance.MaxAccessoryBonus}]");
 
-    // __instance.weaponSelection
+        // __instance.weaponSelection
 
-    // StringBuilder sb = new();
-    //
-    // foreach (var weapon in PhaserSaveDataUtils.LoadSaveFiles().sealed)
-    // {
-    //     Log.Msg(weapon);
-    // }
-    //
-    // Log.Msg(sb.ToString());
+        // StringBuilder sb = new();
+        //
+        // foreach (var weapon in PhaserSaveDataUtils.LoadSaveFiles().sealed)
+        // {
+        //     Log.Msg(weapon);
+        // }
+        //
+        // Log.Msg(sb.ToString());
 
-    // GM.Core.IsWeaponTypeAvailable();
-    // var banishedWeapons = GM.Core.LevelUpFactory.BanishedWeapons;
-    // }
+        // GM.Core.IsWeaponTypeAvailable();
+        // var banishedWeapons = GM.Core.LevelUpFactory.BanishedWeapons;
+    }
+
+    [HarmonyPatch(typeof(CharacterController), "OnDeath"), HarmonyPostfix]
+    public static void OnDeath(CharacterController __instance)
+    {
+        if (DeathIsQueued)
+        {
+            DeathIsQueued = false;
+            return;
+        }
+
+        if (!DeathLink) return;
+        Client?.SendDeathLink(DeathlinkMessages[Random.Shared.Next(DeathlinkMessages.Length)]);
+    }
 
     // [HarmonyPatch(typeof(LevelUpFactory), "BanishedSealedWeapons"), HarmonyPrefix]
     // public static void Test1(LevelUpFactory __instance)

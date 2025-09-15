@@ -1,7 +1,12 @@
 using System.Collections.Concurrent;
+using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
+using Archipelago.MultiClient.Net.Packets;
+using ArchipelagoSurvivors.Patches;
 using CreepyUtil.Archipelago;
+using Il2CppNewtonsoft.Json;
 using Il2CppVampireSurvivors.Data;
+using Il2CppVampireSurvivors.Framework;
 using UnityEngine;
 using static ArchipelagoSurvivors.Core;
 using static ArchipelagoSurvivors.InformationTransformer;
@@ -15,8 +20,6 @@ public static class APSurvivorClient
     private static List<long> ChecksToSend = [];
     public static ConcurrentQueue<long> ChecksToSendQueue = [];
     public static ApClient? Client;
-    private static double NextSend = 4;
-
     public static CharacterType StartingCharacter;
     public static StageType StartingStage;
     public static StageType[] StagesToBeat;
@@ -26,8 +29,15 @@ public static class APSurvivorClient
     public static bool IsEggesLocked = false;
     public static long ChestCheckAmount;
 
+    private static double NextSend = 4;
+    private static double DeathlinkCooldown;
+    private static bool _Deathlink;
+
+    public static bool DeathLink => _Deathlink;
+
     public static string[]? TryConnect(int port, string slot, string address, string password)
     {
+        _Deathlink = false;
         try
         {
             Client = new ApClient();
@@ -80,17 +90,57 @@ public static class APSurvivorClient
             IsArcanasLocked = (bool)slotdata["is_arcanas_locked"];
             IsEggesLocked = (long)slotdata["egg_inclusion"] != 2;
             ChestCheckAmount = (long)slotdata["chest_checks_per_stage"];
-            
+
             AllowedStages.Add(StartingStage);
             AllowedCharacters.Add(StartingCharacter);
 
-            CharactersBeaten = Client!.GetFromStorage<string[]>("characters_completed", def: []).Select(s => CharacterNameToType[s]).ToList();
-            StagesBeaten = Client!.GetFromStorage<string[]>("levels_completed", def: []).Select(s => StageNameToType[s]).ToList();
+            CharactersBeaten = Client!.GetFromStorage<string[]>("characters_completed", def: [])
+                                      .Select(s => CharacterNameToType[s])
+                                      .ToList();
+            StagesBeaten = Client!.GetFromStorage<string[]>("levels_completed", def: [])
+                                  .Select(s => StageNameToType[s])
+                                  .ToList();
 
             foreach (var stage in StagesBeaten)
             {
                 AddLocationToQueue($"{StageTypeToName[stage]} Beaten");
             }
+
+            Client!.Session!.Socket.PacketReceived += jsonPacket =>
+            {
+                if (jsonPacket is not BouncedPacket packet) return;
+                if (!packet.Tags.Contains("DeathLink")) return;
+                if (GM.Core?.Player is null) return;
+
+                var person = packet.Data.TryGetValue("source", out var source) ? source.ToString() : "Unknown";
+                if (person == Client.PlayerName) return;
+                
+                Log.Msg(
+                    $"Received Deathlink from [{person}] for \n[{(packet.Data.TryGetValue("source", out var cause) ? cause : "Unknown Reason")}]");
+
+                if (GM.Core.IsPaused)
+                {
+                    Log.Msg("Deathlink was parried by pause (DON'T ABUSE)");
+                    return;
+                }
+                
+                if (DeathlinkCooldown > 0)
+                {
+                    Log.Msg("Deathlink on cooldown");
+                    return;
+                }
+
+                DeathlinkCooldown = 4;
+                
+                DeathIsQueued = true;
+                try
+                {
+                    GM.Core.Player.Kill();
+                }
+                catch
+                {
+                }
+            };
         }
         catch (Exception e)
         {
@@ -131,6 +181,7 @@ public static class APSurvivorClient
         if (Client?.Session?.Socket is null || !Client.IsConnected) return;
 
         NextSend -= Time.deltaTime;
+        if (DeathlinkCooldown > 0) DeathlinkCooldown -= Time.deltaTime; 
         if (ChecksToSend.Any() && NextSend <= 0)
         {
             SendChecks();
@@ -142,12 +193,14 @@ public static class APSurvivorClient
             var newItems = rawNewItems
                           .Select(item => item?.ItemName!)
                           .ToArray();
-            
-            AllowedCharacters.AddRange(newItems.Where(s => s.StartsWith("Character Unlock: ")).Select(s =>
-                CharacterNameToType[s[18..]]));
-            
-            AllowedStages.AddRange(newItems.Where(s => s.StartsWith("Stage Unlock: ")).Select(s => 
-                StageNameToType[s[14..]]));
+
+            AllowedCharacters.AddRange(newItems.Where(s => s.StartsWith("Character Unlock: "))
+                                               .Select(s =>
+                                                    CharacterNameToType[s[18..]]));
+
+            AllowedStages.AddRange(newItems.Where(s => s.StartsWith("Stage Unlock: "))
+                                           .Select(s =>
+                                                StageNameToType[s[14..]]));
 
             foreach (var gamemode in newItems.Where(s => s.StartsWith("Gamemode Unlock: ")).Select(s => s[17..]))
             {
@@ -167,7 +220,7 @@ public static class APSurvivorClient
                         break;
                 }
             }
-            
+
             // Jobs += newItems.Count(item => item == "A Job Well Done");
             // var newAllowed = newItems.Where(item => item.EndsWith(" Unlock"))
             //                          .Select(item => LevelUnlockDictionary[item])
@@ -208,5 +261,20 @@ public static class APSurvivorClient
         if (ChecksToSendQueue.Contains(location)) return;
         ChecksToSendQueue.Enqueue(location);
         Log.Msg($"Send check: [{locationName}]");
+    }
+
+    public static void ToggleDeathlink()
+    {
+        if (Client?.Session is null) return;
+        if (_Deathlink)
+        {
+            Client.Session.ConnectionInfo.UpdateConnectionOptions([]);
+            _Deathlink = false;
+        }
+        else
+        {
+            Client.Session.ConnectionInfo.UpdateConnectionOptions(["DeathLink"]);
+            _Deathlink = true;
+        }
     }
 }

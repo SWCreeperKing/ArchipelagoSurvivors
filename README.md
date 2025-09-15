@@ -16,6 +16,13 @@
 - Mods do not work on the beta, so make sure to back up your beta save if you went into the beta
 - Controller navigation is broken in character/stage selection
     - cry about it, too lazy to figure out how to fix
+- DeathLink
+  - can be enabled/disabled on the main menu
+  - pausing can block deathlinks (this is to prevent crashes, please do not abuse)
+  - you can not receive a deathlink within 4s of another
+- QoL Mod (AutoUnexcludeEquippedWeapons)
+  - this is a QoL mod included with the mod 
+  - if you have a sealed/banished weapon it will be unsealed/unbanished for the run so it can be leveled up
 
 ### Multiplayer
 
