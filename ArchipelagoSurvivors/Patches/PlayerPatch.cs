@@ -6,6 +6,7 @@ using Il2CppVampireSurvivors.Framework.Saves;
 using Il2CppVampireSurvivors.Objects;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
+using static ArchipelagoSurvivors.GoalRequirement;
 using static ArchipelagoSurvivors.InformationTransformer;
 using CharacterController = Il2CppVampireSurvivors.Objects.Characters.CharacterController;
 
@@ -25,7 +26,7 @@ public class PlayerPatch
 
     public static List<StageType> StagesBeaten = [];
     public static List<CharacterType> CharactersBeaten = [];
-    public static int LastMinuteBarrier = -1;
+    public static int LastMinuteCheck = -1;
     public static bool DeathIsQueued;
 
     [HarmonyPatch(typeof(CharacterController), "OnUpdate"), HarmonyPostfix]
@@ -33,15 +34,15 @@ public class PlayerPatch
     {
         var currentMinute = GM.Core.Stage.CurrentMinute;
 
-        if (LastMinuteBarrier == -1)
+        if (LastMinuteCheck == -1)
         {
-            LastMinuteBarrier = 0;
+            LastMinuteCheck = 0;
             Log.Msg($"stage loop time: [{GM.Core.Stage._maxStageDataMinute}]");
         }
 
-        if (LastMinuteBarrier <= currentMinute && GM.Core.Stage._maxStageDataMinute > currentMinute)
+        if (LastMinuteCheck <= currentMinute && GM.Core.Stage._maxStageDataMinute > currentMinute)
         {
-            LastMinuteBarrier = currentMinute;
+            LastMinuteCheck = currentMinute;
             return;
         }
 
@@ -62,7 +63,8 @@ public class PlayerPatch
             AddLocationToQueue($"{StageTypeToName[GM.Core.Stage.StageType]} Beaten");
             StagesBeaten.Add(GM.Core.Stage.StageType);
             Client.SendToStorage("levels_completed", StagesBeaten.Select(st => StageTypeToName[st]).ToArray());
-            if (StagesBeaten.Count != StagesToBeat.Length || Client.HasGoaled) return;
+            if (StagesBeaten.Count != StagesToBeat.Length ||
+                Client.HasGoaled || APSurvivorClient.GoalRequirement != StageHunt) return;
             Client.Goal();
         }
     }
@@ -78,13 +80,14 @@ public class PlayerPatch
     [HarmonyPatch(typeof(CharacterController), "OnDeath"), HarmonyPostfix]
     public static void OnDeath(CharacterController __instance)
     {
-        if (DeathIsQueued)
+        if (DeathIsQueued || DeathlinkCooldown > 0)
         {
             DeathIsQueued = false;
             return;
         }
 
         if (!DeathLink) return;
+        DeathlinkCooldown = 4;
         Client?.SendDeathLink(DeathlinkMessages[Random.Shared.Next(DeathlinkMessages.Length)]);
     }
 }

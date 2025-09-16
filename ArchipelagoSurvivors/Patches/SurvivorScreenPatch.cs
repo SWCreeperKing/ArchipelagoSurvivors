@@ -35,9 +35,9 @@ public static class SurvivorScreenPatch
             ChestPickupPatch.ChestsOpened = 0;
         }
 
-        if (LastMinuteBarrier != -1)
+        if (LastMinuteCheck != -1)
         {
-            LastMinuteBarrier = -1;
+            LastMinuteCheck = -1;
         }
         
         EggController.Update();

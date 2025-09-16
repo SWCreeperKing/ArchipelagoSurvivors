@@ -16,7 +16,7 @@ namespace ArchipelagoSurvivors;
 public class APGui : MonoBehaviour
 {
     public static bool ShowGUI = true;
-    public static string Ipporttext = "archipelago.gg:12345";
+    public static string IpPorttext = "archipelago.gg:12345";
     public static string Password = "";
     public static string Slot = "Survivor";
     public static string State = "";
@@ -55,7 +55,7 @@ public class APGui : MonoBehaviour
     {
         if (!File.Exists("ApConnection.txt")) return;
         var fileText = File.ReadAllText("ApConnection.txt").Replace("\r", "").Split('\n');
-        Ipporttext = fileText[0];
+        IpPorttext = fileText[0];
         Password = fileText[1];
         Slot = fileText[2];
     }
@@ -76,7 +76,7 @@ public class APGui : MonoBehaviour
             GUI.Box(new Rect(10 + Offset.x, 10 + Offset.y, 200, 300), "AP Client");
 
             GUI.Label(new Rect(20 + Offset.x, 40 + Offset.y, 300, 30), "Address:port", TextStyle);
-            Ipporttext = GUI.TextField(new Rect(20 + Offset.x, 60 + Offset.y, 180, 25), Ipporttext, 25);
+            IpPorttext = GUI.TextField(new Rect(20 + Offset.x, 60 + Offset.y, 180, 25), IpPorttext, 25);
 
             GUI.Label(new Rect(20 + Offset.x, 90 + Offset.y, 300, 30), "Password", TextStyle);
             Password = GUI.TextField(new Rect(20 + Offset.x, 110 + Offset.y, 180, 25), Password, 25);
@@ -102,9 +102,14 @@ public class APGui : MonoBehaviour
             MainMenuPatch.StartButton.gameObject.SetActive(IsConnected());
         }
 
+        if (MainMenuPatch.BestiaryButton is not null)
+        {
+            MainMenuPatch.BestiaryButton.gameObject.SetActive(IsConnected() && EnemysanityEnabled);
+        }
+        
         if (!IsConnected() && GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 180, 30), "Connect"))
         {
-            var ipPortSplit = Ipporttext.Split(':');
+            var ipPortSplit = IpPorttext.Split(':');
             if (!int.TryParse(ipPortSplit[1], out var port))
             {
                 State = $"[{ipPortSplit[1]}] is not a valid port";
@@ -120,7 +125,7 @@ public class APGui : MonoBehaviour
             }
 
             State = "";
-            File.WriteAllText("ApConnection.txt", $"{Ipporttext}\n{Password}\n{Slot}");
+            File.WriteAllText("ApConnection.txt", $"{IpPorttext}\n{Password}\n{Slot}");
             TimeAccumulator = 0;
         }
 

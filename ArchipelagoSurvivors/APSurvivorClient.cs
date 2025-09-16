@@ -15,6 +15,12 @@ using static ArchipelagoSurvivors.Patches.SurvivorScreenPatch;
 
 namespace ArchipelagoSurvivors;
 
+public enum GoalRequirement
+{
+    StageHunt,
+    KillTheDirector
+}
+
 public static class APSurvivorClient
 {
     private static List<long> ChecksToSend = [];
@@ -27,10 +33,12 @@ public static class APSurvivorClient
     public static bool IsHurryLocked = false;
     public static bool IsArcanasLocked = false;
     public static bool IsEggesLocked = false;
+    public static bool EnemysanityEnabled = false;
     public static long ChestCheckAmount;
+    public static GoalRequirement GoalRequirement;
+    public static double DeathlinkCooldown;
 
     private static double NextSend = 4;
-    private static double DeathlinkCooldown;
     private static bool _Deathlink;
 
     public static bool DeathLink => _Deathlink;
@@ -101,6 +109,11 @@ public static class APSurvivorClient
                                   .Select(s => StageNameToType[s])
                                   .ToList();
 
+            EnemysanityEnabled = slotdata.TryGetValue("enemysanity", out var enemysanity) && (bool)enemysanity;
+            GoalRequirement = (GoalRequirement)(slotdata.TryGetValue("goal_requirement", out var goalrequirement)
+                ? (long)goalrequirement
+                : 0);
+
             foreach (var stage in StagesBeaten)
             {
                 AddLocationToQueue($"{StageTypeToName[stage]} Beaten");
@@ -131,6 +144,7 @@ public static class APSurvivorClient
                 }
 
                 DeathlinkCooldown = 4;
+                DeathIsQueued = true;
                 GM.Core.Player.Kill();
             };
         }

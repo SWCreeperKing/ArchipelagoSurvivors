@@ -54,7 +54,7 @@
 - Melon Loader (obv)
 - Rider
 - UnityExplorer
-- [Vampire Survivors Moddding Docs](https://github.com/lukeod/vampiresurvivors-modding)
+- [Vampire Survivors Modding Docs](https://github.com/lukeod/vampiresurvivors-modding)
 
 ---
 

@@ -16,7 +16,7 @@ namespace ArchipelagoSurvivors
 			
 			HarmonyInstance.PatchAll(typeof(SurvivorScreenPatch));
 			HarmonyInstance.PatchAll(typeof(ChestPickupPatch));
-			// HarmonyInstance.PatchAll(typeof(EnemyCounterPatch));
+			HarmonyInstance.PatchAll(typeof(EnemyCounterPatch));
 			HarmonyInstance.PatchAll(typeof(MainMenuPatch));
 			HarmonyInstance.PatchAll(typeof(PlayerPatch));
 			
