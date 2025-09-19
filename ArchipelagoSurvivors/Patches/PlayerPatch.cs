@@ -28,6 +28,7 @@ public class PlayerPatch
     public static List<CharacterType> CharactersBeaten = [];
     public static int LastMinuteCheck = -1;
     public static bool DeathIsQueued;
+    public static bool Warning;
 
     [HarmonyPatch(typeof(CharacterController), "OnUpdate"), HarmonyPostfix]
     public static void OnUpdate(CharacterController __instance)
@@ -47,14 +48,25 @@ public class PlayerPatch
         }
 
         if (Client is null) return;
+        if (IsHurryLocked)
+        {
+            if (Warning) return;
+            Warning = true;
+            Log.Msg(ConsoleColor.Yellow,
+                "You do not have hurry unlocked so `Beat with [character]` and `[stage] beaten` checks are locked");
+            return;
+        }
 
         if (!CharactersBeaten.Contains(__instance.CharacterType))
         {
-            Log.Msg("beat with check");
-            AddLocationToQueue($"Beat with {CharacterTypeToName[__instance.CharacterType]}");
-            CharactersBeaten.Add(__instance.CharacterType);
-            Client.SendToStorage("characters_completed",
-                CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray());
+            if (CharacterTypeToName.TryGetValue(__instance.CharacterType, out var value))
+            {
+                Log.Msg("beat with check");
+                AddLocationToQueue($"Beat with {value}");
+                CharactersBeaten.Add(__instance.CharacterType);
+                Client.SendToStorage("characters_completed",
+                    CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray());
+            }
         }
 
         if (!StagesBeaten.Contains(GM.Core.Stage.StageType))
@@ -75,6 +87,7 @@ public class PlayerPatch
         CharacterType characterType, int playerIndex, bool dontGetCharacterDataForCurrentLevel)
     {
         DeathIsQueued = false;
+        Warning = false;
     }
 
     [HarmonyPatch(typeof(CharacterController), "OnDeath"), HarmonyPostfix]

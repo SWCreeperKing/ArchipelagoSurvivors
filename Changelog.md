@@ -1,3 +1,13 @@
+# v.0.2
+
+- [ApWorld] Added Enemysanity
+- [ApWorld] Added Kill Director goal type
+- [ApWorld] Added support for Universal Tracker
+- [ApWorld] Fixed bug where eggs unlock wouldn't be added to the multiworld
+- [ApWorld] Added logic for requiring hurry for `Beat with [character]` and `[stage] beaten` checks
+
+---
+
 # v.0.1.3
 
 - [ApWorld] Added "Random" option to characters and stages

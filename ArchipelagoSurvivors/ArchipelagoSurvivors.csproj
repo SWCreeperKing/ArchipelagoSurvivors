@@ -15,14 +15,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="Archipelago.MultiClient.Net">
-		  <HintPath>Lib\Archipelago.MultiClient.Net.dll</HintPath>
+		<Reference Include="BundledApClient">
+		  <HintPath>Lib\BundledApClient.dll</HintPath>
 		</Reference>
 		<Reference Include="Assembly-CSharp">
 			<HintPath>F:\SteamLibrary\steamapps\common\Vampire Survivors\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
-		</Reference>
-		<Reference Include="CreepyUtil.Archipelago">
-		  <HintPath>Lib\CreepyUtil.Archipelago.dll</HintPath>
 		</Reference>
 		<Reference Include="Il2CppAppleAuth">
 			<HintPath>F:\SteamLibrary\steamapps\common\Vampire Survivors\MelonLoader\Il2CppAssemblies\Il2CppAppleAuth.dll</HintPath>
@@ -215,9 +212,6 @@
 		</Reference>
 		<Reference Include="Il2Cpp__Generated">
 			<HintPath>F:\SteamLibrary\steamapps\common\Vampire Survivors\MelonLoader\Il2CppAssemblies\Il2Cpp__Generated.dll</HintPath>
-		</Reference>
-		<Reference Include="Newtonsoft.Json">
-		  <HintPath>Lib\Newtonsoft.Json.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.Addressables">
 			<HintPath>F:\SteamLibrary\steamapps\common\Vampire Survivors\MelonLoader\Il2CppAssemblies\Unity.Addressables.dll</HintPath>

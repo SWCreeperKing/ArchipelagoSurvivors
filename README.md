@@ -30,6 +30,12 @@
 
 ---
 
+# Special Thanks
+
+- Sterlia for being my 'logic slave'
+
+---
+
 ## How to install
 
 (tutorial totally not copy and pasted from Tunic AP mod and BTD6 Mod helper)

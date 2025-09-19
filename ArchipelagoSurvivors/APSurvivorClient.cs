@@ -23,8 +23,8 @@ public enum GoalRequirement
 
 public static class APSurvivorClient
 {
-    private static List<long> ChecksToSend = [];
-    public static ConcurrentQueue<long> ChecksToSendQueue = [];
+    private static HashSet<string> ChecksToSend = [];
+    public static ConcurrentQueue<string> ChecksToSendQueue = [];
     public static ApClient? Client;
     public static CharacterType StartingCharacter;
     public static StageType StartingStage;
@@ -37,6 +37,7 @@ public static class APSurvivorClient
     public static long ChestCheckAmount;
     public static GoalRequirement GoalRequirement;
     public static double DeathlinkCooldown;
+    public static long StagesToBeatForDirector = 0;
 
     private static double NextSend = 4;
     private static bool _Deathlink;
@@ -114,15 +115,17 @@ public static class APSurvivorClient
                 ? (long)goalrequirement
                 : 0);
 
+            StagesToBeatForDirector = slotdata.TryGetValue("ending_stage_count", out var goalstagerequirement)
+                ? (long)goalstagerequirement
+                : 0;
+
             foreach (var stage in StagesBeaten)
             {
                 AddLocationToQueue($"{StageTypeToName[stage]} Beaten");
             }
 
-            Client!.Session!.Socket.PacketReceived += jsonPacket =>
+            Client!.OnDeathLinkPacketReceived += packet =>
             {
-                if (jsonPacket is not BouncedPacket packet) return;
-                if (!packet.Tags.Contains("DeathLink")) return;
                 if (GM.Core?.Player is null) return;
 
                 var person = packet.Data.TryGetValue("source", out var source) ? source.ToString() : "Unknown";
@@ -147,13 +150,15 @@ public static class APSurvivorClient
                 DeathIsQueued = true;
                 GM.Core.Player.Kill();
             };
+
+            Client!.ItemsSentNotification += str => Log.Msg(ConsoleColor.DarkGray, $"Check Sent: [{str}]");
         }
         catch (Exception e)
         {
             Log.Error(e);
         }
 
-        Log.Msg("Connnected");
+        Log.Msg("Connected");
     }
 
     public static bool IsConnected()
@@ -226,11 +231,8 @@ public static class APSurvivorClient
     public static void AddLocationToQueue(string locationName)
     {
         if (Client is null) return;
-        if (Client.MissingLocations.All(kv => kv.Value.LocationName != locationName)) return;
-        var location = Client.MissingLocations.First(kv => kv.Value.LocationName == locationName).Key;
-        if (ChecksToSendQueue.Contains(location)) return;
-        ChecksToSendQueue.Enqueue(location);
-        Log.Msg($"Send check: [{locationName}]");
+        if (ChecksToSendQueue.Contains(locationName) || ChecksToSend.Contains(locationName)) return;
+        ChecksToSendQueue.Enqueue(locationName);
     }
 
     public static void ToggleDeathlink()

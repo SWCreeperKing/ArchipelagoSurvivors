@@ -11,17 +11,17 @@ namespace ArchipelagoSurvivors.Patches;
 public static class ChestPickupPatch
 {
     public static int ChestsOpened = 0;
-    public static Dictionary<StageType, int> StageTreasureTracker = [];
 
     [HarmonyPatch(typeof(TreasureChest), "TrackItemPickup"), HarmonyPrefix]
     public static void TrackItem(bool trackRunPickup, TreasureChest __instance)
     {
         var stageType = GM.Core.Stage.StageType;
-        StageTreasureTracker.TryAdd(stageType, 0);
+        // StageTreasureTracker.TryAdd(stageType, 0);
         ChestsOpened++;
+        if (ChestsOpened > ChestCheckAmount) return;
 
-        if (StageTreasureTracker[stageType] >= ChestsOpened || StageTreasureTracker[stageType] >= ChestCheckAmount) return;
-        StageTreasureTracker[stageType]++;
+        // if (StageTreasureTracker[stageType] >= ChestsOpened || StageTreasureTracker[stageType] >= ChestCheckAmount) return;
+        // StageTreasureTracker[stageType]++;
         AddLocationToQueue($"Open Chest #{ChestsOpened} on {StageTypeToName[stageType]}");
     }
 }

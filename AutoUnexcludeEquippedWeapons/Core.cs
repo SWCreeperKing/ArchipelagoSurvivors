@@ -47,7 +47,7 @@ public static class WeaponPatch
         if (weaponType == 0) return;
         if (!GM.Core.LevelUpFactory.BanishedWeapons.Contains(weaponType)) return;
 
-        Log.Msg($"Unsealing/Unbanishing [{signalType.Name.Replace("AddedToCharacterSignal", "")}] [{weaponType}]");
+        Log.Msg(ConsoleColor.Gray, $"Unsealing/Unbanishing [{signalType.Name.Replace("AddedToCharacterSignal", "")}] [{weaponType}]");
         
         GM.Core.LevelUpFactory.ExcludedWeapons.Remove(weaponType);
         GM.Core.LevelUpFactory.BanishedWeapons.Remove(weaponType);

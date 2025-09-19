@@ -12,6 +12,7 @@ using UnityEngine;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
 using static ArchipelagoSurvivors.InformationTransformer;
+using static ArchipelagoSurvivors.Patches.EnemyCounterPatch;
 using Random = System.Random;
 
 namespace ArchipelagoSurvivors.Patches;
@@ -53,6 +54,7 @@ public static class MainMenuPatch
     public static void BestiarySetData(EnemyItemUI __instance, EnemyType type, int count, EnemyData dat,
         BestiaryPage page, bool hasKilled)
     {
+        __instance.gameObject.SetActive(false);
         // var enemySpawnList = __instance._data.bPlaces._items.Select(st => StageTypeToName[st]).ToList();
         //
         // int i;
@@ -64,7 +66,21 @@ public static class MainMenuPatch
         // sb.Append($"\"{__instance._Name.text}\": [{string.Join(", ", enemySpawnList.Select(s => $"\"{s}\""))}],\n");
         // sb2.Append($"[{type}] = \"{__instance._Name.text.Trim()}\",\n");
         if (Client is null) return;
-        var killed = Client.MissingLocations.All(kv => kv.Value.LocationName != $"Kill {EnemyTypeToName[__instance._type]}");
+
+        var enemyType = __instance._type;
+        if (EnemyVariantListings.TryGetValue(enemyType, out var potentialType)) enemyType = potentialType;
+        
+        if (!EnemyTypeToName.TryGetValue(enemyType, out var enemyName))
+        {
+            if (EnemyTypes.Contains(enemyType)) return;
+            EnemyTypes.Add(enemyType);
+            Log.Error($"New BESTIARY enemy encounter: ({__instance._Name.text}) [{enemyType}]");
+            return;
+        }
+
+        if (!Client.DataLookup.Locations.TryGetValue($"Kill {enemyName}", out var id)) return;
+        
+        var killed = Client.MissingLocations.Contains(id);
         __instance._Name.text = $"[{(killed ? "Killed" : "Unkilled")}] {__instance._Name.text}";
         __instance.gameObject.SetActive(!killed);
 
