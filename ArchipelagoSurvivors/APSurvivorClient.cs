@@ -40,20 +40,16 @@ public static class APSurvivorClient
     public static long StagesToBeatForDirector = 0;
 
     private static double NextSend = 4;
-    private static bool _Deathlink;
-
-    public static bool DeathLink => _Deathlink;
 
     public static string[]? TryConnect(int port, string slot, string address, string password)
     {
-        _Deathlink = false;
         try
         {
             Client = new ApClient();
             Log.Msg($"Attempting to connect [{address}]:[{port}] [{password}] [{slot}]");
 
-            var connectError = Client.TryConnect(new LoginInfo(port, slot, address, password), 0x3AF4F1BC,
-                "Vampire Survivors", ItemsHandlingFlags.AllItems, requestSlotData: true);
+            var connectError = Client.TryConnect(new LoginInfo(port, slot, address, password), "Vampire Survivors",
+                ItemsHandlingFlags.AllItems, requestSlotData: true);
 
             if (connectError is not null && connectError.Length > 0)
             {
@@ -233,20 +229,5 @@ public static class APSurvivorClient
         if (Client is null) return;
         if (ChecksToSendQueue.Contains(locationName) || ChecksToSend.Contains(locationName)) return;
         ChecksToSendQueue.Enqueue(locationName);
-    }
-
-    public static void ToggleDeathlink()
-    {
-        if (Client?.Session is null) return;
-        if (_Deathlink)
-        {
-            Client.Session.ConnectionInfo.UpdateConnectionOptions([]);
-            _Deathlink = false;
-        }
-        else
-        {
-            Client.Session.ConnectionInfo.UpdateConnectionOptions(["DeathLink"]);
-            _Deathlink = true;
-        }
     }
 }

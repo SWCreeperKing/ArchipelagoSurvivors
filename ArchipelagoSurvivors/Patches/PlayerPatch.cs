@@ -8,6 +8,7 @@ using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
 using static ArchipelagoSurvivors.GoalRequirement;
 using static ArchipelagoSurvivors.InformationTransformer;
+using static CreepyUtil.Archipelago.ArchipelagoTag;
 using CharacterController = Il2CppVampireSurvivors.Objects.Characters.CharacterController;
 
 namespace ArchipelagoSurvivors.Patches;
@@ -99,7 +100,7 @@ public class PlayerPatch
             return;
         }
 
-        if (!DeathLink) return;
+        if (!Client!.Tags[DeathLink]) return;
         DeathlinkCooldown = 4;
         Client?.SendDeathLink(DeathlinkMessages[Random.Shared.Next(DeathlinkMessages.Length)]);
     }

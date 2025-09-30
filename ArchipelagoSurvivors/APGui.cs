@@ -7,6 +7,7 @@ using MelonLoader;
 using UnityEngine;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
+using static CreepyUtil.Archipelago.ArchipelagoTag;
 using Saver = Il2CppVampireSurvivors.Framework.Saves.PhaserSaveDataUtils;
 
 namespace ArchipelagoSurvivors;
@@ -90,11 +91,11 @@ public class APGui : MonoBehaviour
             if (DeathlinkToggleTimer <= 0 && GUI.Button(new Rect(10 + Offset.x, 10 + Offset.y + 130, 200, 50), "Toggle Deathlink"))
             {
                 DeathlinkToggleTimer = 3;
-                ToggleDeathlink();
+                Client?.Tags.ToggleDeathLink();
             }
 
             GUI.Label(new Rect(10 + Offset.x, 10 + Offset.y + 180, 200, 50),
-                DeathLink ? "Deathlink is enabled" : "Deathlink is disabled", TextStyle);
+                Client!.Tags[DeathLink] ? "Deathlink is enabled" : "Deathlink is disabled", TextStyle);
         }
 
         if (MainMenuPatch.StartButton is not null)

@@ -9,6 +9,7 @@ using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.UI;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.UI;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
 using static ArchipelagoSurvivors.InformationTransformer;
@@ -19,6 +20,7 @@ namespace ArchipelagoSurvivors.Patches;
 
 public static class MainMenuPatch
 {
+    // public static GameObject ConnectButton;
     public static GameObject StartButton;
     public static GameObject BestiaryButton;
 
@@ -38,6 +40,16 @@ public static class MainMenuPatch
         container.GetChild(1).AddComponent<Invisinator>(); // quick start button
         container.GetChild(12).AddComponent<Invisinator>(); // adventure button
         __instance.gameObject.AddComponent<APGui>();
+
+        // var startButtonRectTransform = StartButton.GetComponent<RectTransform>();
+        // var startButtonButton = StartButton.GetComponent<Button>();
+        // var startButtonImage = StartButton.GetComponent<Image>();
+        //
+        // ConnectButton = new GameObject("Connect Button");
+        // ConnectButton.transform.SetParent(container.transform);
+        // var connectButtonRectTransform = ConnectButton.AddComponent<RectTransform>();
+        // var connectButtonButton = ConnectButton.AddComponent<Button>();
+        // var connectButtonImage = ConnectButton.AddComponent<Image>();
     }
 
     [HarmonyPatch(typeof(EnemyItemUI), "SetData"), HarmonyPrefix]
@@ -78,9 +90,9 @@ public static class MainMenuPatch
             return;
         }
 
-        if (!Client.DataLookup.Locations.TryGetValue($"Kill {enemyName}", out var id)) return;
+        if (!Client.Locations.TryGetValue($"Kill {enemyName}", out _)) return;
         
-        var killed = Client.MissingLocations.Contains(id);
+        var killed = Client.MissingLocations.Contains($"Kill {enemyName}");
         __instance._Name.text = $"[{(killed ? "Killed" : "Unkilled")}] {__instance._Name.text}";
         __instance.gameObject.SetActive(!killed);
 

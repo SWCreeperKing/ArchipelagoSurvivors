@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Il2CppPlayFab.Internal;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.UI;
 using UnityEngine;
@@ -75,7 +76,7 @@ public static class SurvivorScreenPatch
         HurryController.Update();
         ArcaneController.Update();
 
-        var missingText = Client!.MissingLocations.Select(loc => Client!.DataLookup.Locations[loc]).ToArray();
+        var missingText = Client!.MissingLocations.ToArray();
         foreach (var stage in __instance.GetChild(0)
                                         .GetChild(1)
                                         .GetChild(0)
@@ -87,12 +88,13 @@ public static class SurvivorScreenPatch
 
             stage.gameObject.SetActive(AllowedStages.Contains(stage.Type));
             stage._Exclamation.SetActive(!IsHurryLocked && hasBeaten);
-            
+
             if (stage.Type == StageType.MACHINE)
             {
                 if (APSurvivorClient.GoalRequirement == GoalRequirement.KillTheDirector)
                 {
-                    stage.DescriptionText.text = $"Stages beaten requirement to open:\n[{StagesBeaten.Count}] of [{StagesToBeatForDirector}]";
+                    stage.DescriptionText.text =
+                        $"Stages beaten requirement to open:\n[{StagesBeaten.Count}] of [{StagesToBeatForDirector}]";
                 }
             }
             else
@@ -100,13 +102,21 @@ public static class SurvivorScreenPatch
                 var chestChecksMissing = missingText.Where(s => !s.Contains("Beaten") && s.Contains(stageName))
                                                     .Select(s => s.Replace($" on {stageName}", ""))
                                                     .ToArray();
-                
-                var enemyChecksMissing = missingText.Where(s => s.Contains("Kill"))
-                                                    .Select(s => EnemyNameToType[s[5..]])
-                                                    .Where(et => EnemyStages[et].Contains(stage.Type))
-                                                    .Select(et => EnemyTypeToName[et])
-                                                    .ToArray();
-                
+
+                var rawEnemyChecksMissing = missingText.Where(s => s.Contains("Kill"))
+                                                       .Select(s => EnemyNameToType[s[5..]])
+                                                       .Where(et => EnemyStages[et].Contains(stage.Type));
+
+                if (IsHurryLocked)
+                {
+                    rawEnemyChecksMissing = rawEnemyChecksMissing
+                                           .Where(et => !EnemyHurryStages.ContainsKey(et) ||
+                                                        !EnemyHurryStages[et].Contains(stage.Type))
+                                           .ToArray();
+                }
+
+                var enemyChecksMissing = rawEnemyChecksMissing.Select(et => EnemyTypeToName[et]).ToArray();
+
                 if (chestChecksMissing.Any())
                 {
                     stage.DescriptionText.text = $"Chest Checks Remaining:\n{string.Join(", ", chestChecksMissing)}";
@@ -120,7 +130,7 @@ public static class SurvivorScreenPatch
                     stage.DescriptionText.text = "All Chest and Enemy Checks Got!";
                 }
             }
-            
+
             if (stage.Type != StageType.MACHINE ||
                 APSurvivorClient.GoalRequirement != GoalRequirement.KillTheDirector) continue;
 
