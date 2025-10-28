@@ -1,4 +1,4 @@
-# v.0.2
+# v0.2
 
 - [ApWorld] Added Enemysanity
 - [ApWorld] Added Kill Director goal type

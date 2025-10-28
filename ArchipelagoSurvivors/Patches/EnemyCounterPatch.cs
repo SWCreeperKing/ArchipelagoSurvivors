@@ -14,6 +14,7 @@ public static class EnemyCounterPatch
 {
     // public static Dictionary<EnemyType, int> KillCounter = new();
     private static List<int> Warnlist = [];
+    private static List<EnemyType> Warnlist2 = [];
     public static List<EnemyType> EnemyTypes;
     public static Dictionary<EnemyType, EnemyType> EnemyVariantListings = [];
 
@@ -36,6 +37,14 @@ public static class EnemyCounterPatch
 
         // Log.Msg($"c: [{EnemyVariantListings.ContainsKey(ANGEL1)}] [{EnemyStages.ContainsKey(ANGEL1)}] || [{__instance.EnemyType}] => [{enemyType}] || [{EnemyVariantListings.ContainsKey(__instance.EnemyType)}]");
 
+        if (!EnemyStages.ContainsKey(enemyType))
+        {
+            if (Warnlist2.Contains(__instance.EnemyType)) return;
+            Warnlist2.Add(__instance.EnemyType);
+            Log.Error($"Enemy: [{__instance.EnemyType}], variant of: [{enemyType}] does not show up in Enemysanity, please report");
+            return;
+        }
+        
         var stage = GM.Core.Stage.StageType;
         if (!EnemyStages[enemyType].Contains(stage)) return;
         // Log.Msg("d");

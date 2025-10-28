@@ -1,6 +1,8 @@
 ﻿using ArchipelagoSurvivors.Patches;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppVampireSurvivors.Data;
 using MelonLoader;
+using UnityEngine;
 using static ArchipelagoSurvivors.InformationTransformer;
 using static ArchipelagoSurvivors.Patches.EnemyCounterPatch;
 

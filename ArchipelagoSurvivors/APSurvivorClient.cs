@@ -4,6 +4,7 @@ using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Packets;
 using ArchipelagoSurvivors.Patches;
 using CreepyUtil.Archipelago;
+using CreepyUtil.Archipelago.ApClient;
 using Il2CppNewtonsoft.Json;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Framework;
@@ -120,15 +121,13 @@ public static class APSurvivorClient
                 AddLocationToQueue($"{StageTypeToName[stage]} Beaten");
             }
 
-            Client!.OnDeathLinkPacketReceived += packet =>
+            Client!.OnDeathLinkPacketReceived += (source, cause) =>
             {
                 if (GM.Core?.Player is null) return;
 
-                var person = packet.Data.TryGetValue("source", out var source) ? source.ToString() : "Unknown";
-                if (person == Client.PlayerName) return;
+                if (source == Client.PlayerName) return;
 
-                Log.Msg(
-                    $"Received Deathlink from [{person}] for \n[{(packet.Data.TryGetValue("source", out var cause) ? cause : "Unknown Reason")}]");
+                Log.Msg($"Received Deathlink from [{source}] for \n[{cause}]");
 
                 if (GM.Core.IsPaused)
                 {
@@ -159,14 +158,14 @@ public static class APSurvivorClient
 
     public static bool IsConnected()
     {
-        return Client is not null && Client.IsConnected && Client.Session!.Socket.Connected;
+        return Client is not null && Client.IsConnected;
     }
 
     public static void Update()
     {
         if (Client is null) return;
         Client.UpdateConnection();
-        if (Client?.Session?.Socket is null || !Client.IsConnected) return;
+        if (!Client.IsConnected) return;
 
         NextSend -= Time.deltaTime;
         if (DeathlinkCooldown > 0) DeathlinkCooldown -= Time.deltaTime;
