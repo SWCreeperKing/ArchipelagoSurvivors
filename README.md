@@ -45,6 +45,11 @@
 - Launch the game again and you should see the connection input on the top left of the title screen!
 - To uninstall the mod, either remove/delete the `SW_CreeperKing.ArchipelagoSurvivors` folder
 
+> [!Note]
+> When downpatching and messing with melon install/reinstall/uninstall
+> Double/triple/quadruple check the mod folder, melon might rename it to `~SW_CreeperKing.ArchipelagoSurvivors`
+> which will prevent the mod from loading correctly
+
 ---
 
 # Special Thanks
