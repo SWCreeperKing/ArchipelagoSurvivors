@@ -45,6 +45,9 @@
 - Launch the game again and you should see the connection input on the top left of the title screen!
 - To uninstall the mod, either remove/delete the `SW_CreeperKing.ArchipelagoSurvivors` folder
 
+>[!Important]
+>Downpatching is required, instructions can be found on the [Archipelago Wiki](https://archipelago.miraheze.org/wiki/Vampire_Survivors)
+
 > [!Note]
 > When downpatching and messing with melon install/reinstall/uninstall
 > Double/triple/quadruple check the mod folder, melon might rename it to `~SW_CreeperKing.ArchipelagoSurvivors`
