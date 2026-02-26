@@ -10,9 +10,9 @@ using static Il2CppVampireSurvivors.Data.EnemyType;
 
 namespace ArchipelagoSurvivors.Patches;
 
+[PatchAll]
 public static class EnemyCounterPatch
 {
-    // public static Dictionary<EnemyType, int> KillCounter = new();
     private static List<int> Warnlist = [];
     private static List<EnemyType> Warnlist2 = [];
     public static List<EnemyType> EnemyTypes;
@@ -24,9 +24,7 @@ public static class EnemyCounterPatch
         if (!EnemysanityEnabled) return;
 
         var enemyType = __instance.EnemyType;
-        // Log.Msg("a");
         if (EnemyVariantListings.TryGetValue(enemyType, out var potentialType)) enemyType = potentialType;
-        // Log.Msg("b");
         if (!EnemyTypeToName.TryGetValue(enemyType, out var value))
         {
             if (EnemyTypes.Contains(enemyType)) return;
@@ -34,8 +32,6 @@ public static class EnemyCounterPatch
             Log.Error($"New enemy encounter: ({__instance._defaultName}) [{enemyType}]");
             return;
         }
-
-        // Log.Msg($"c: [{EnemyVariantListings.ContainsKey(ANGEL1)}] [{EnemyStages.ContainsKey(ANGEL1)}] || [{__instance.EnemyType}] => [{enemyType}] || [{EnemyVariantListings.ContainsKey(__instance.EnemyType)}]");
 
         if (!EnemyStages.ContainsKey(enemyType))
         {
@@ -47,23 +43,16 @@ public static class EnemyCounterPatch
         
         var stage = GM.Core.Stage.StageType;
         if (!EnemyStages[enemyType].Contains(stage)) return;
-        // Log.Msg("d");
         if (EnemyHurryStages.ContainsKey(enemyType) && IsHurryLocked && EnemyHurryStages[enemyType].Contains(stage))
         {
-            // Log.Msg("d.a");
             var hash = HashCode.Combine(enemyType, stage);
-            // Log.Msg("d.b");
-            if (!Warnlist.Contains(hash))
-            {
-                Log.Warning(
-                    $"Not sending enemy kill check [Kill {EnemyTypeToName[enemyType]}] as hurry is required for it to be in logic");
-                Warnlist.Add(hash);
-            }
-
+            if (Warnlist.Contains(hash)) return;
+            Log.Warning(
+                $"Not sending enemy kill check [Kill {EnemyTypeToName[enemyType]}] as hurry is required for it to be in logic");
+            Warnlist.Add(hash);
             return;
         }
 
-        // Log.Msg("e");
         AddLocationToQueue($"Kill {value}");
 
         if (enemyType != DIRECTER || APSurvivorClient.GoalRequirement != KillTheDirector) return;

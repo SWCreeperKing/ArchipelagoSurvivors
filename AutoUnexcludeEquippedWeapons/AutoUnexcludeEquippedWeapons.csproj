@@ -495,7 +495,7 @@
     <Target Name="CopyCustomContent" AfterTargets="AfterBuild">
         <Copy
                 SourceFiles="bin/Debug/net6.0/AutoUnexcludeEquippedWeapons.dll"
-                DestinationFolder="../../../Mods/SW_CreeperKing.ArchipelagoSurvivors"
+                DestinationFolder="../../../Mods"
         />
     </Target>
 </Project>

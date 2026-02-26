@@ -1,13 +1,10 @@
 using System.Collections.Concurrent;
-using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
-using Archipelago.MultiClient.Net.Packets;
-using ArchipelagoSurvivors.Patches;
 using CreepyUtil.Archipelago;
 using CreepyUtil.Archipelago.ApClient;
-using Il2CppNewtonsoft.Json;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Framework;
+using MelonLoader;
 using UnityEngine;
 using static ArchipelagoSurvivors.Core;
 using static ArchipelagoSurvivors.InformationTransformer;
@@ -22,7 +19,7 @@ public enum GoalRequirement
     KillTheDirector
 }
 
-public static class APSurvivorClient
+internal static class APSurvivorClient
 {
     private static HashSet<string> ChecksToSend = [];
     public static ConcurrentQueue<string> ChecksToSendQueue = [];
@@ -46,7 +43,7 @@ public static class APSurvivorClient
     {
         try
         {
-            Client = new ApClient();
+            Client = new ApClient(new TimeSpan(0, 1, 0));
             Log.Msg($"Attempting to connect [{address}]:[{port}] [{password}] [{slot}]");
 
             var connectError = Client.TryConnect(new LoginInfo(port, slot, address, password), "Vampire Survivors",
@@ -116,6 +113,27 @@ public static class APSurvivorClient
                 ? (long)goalstagerequirement
                 : 0;
 
+            Log.Msg($"""
+                     StartingStage: [{StartingStage}]
+                     StartingCharacter: [{StartingCharacter}]
+                     StagesToBeat: [{StagesToBeat.Length}]
+                     IsHyperLocked: [{IsHyperLocked}]
+                     IsHurryLocked: [{IsHurryLocked}]
+                     IsArcanasLocked: [{IsArcanasLocked}]
+                     IsEggesLocked: [{IsEggesLocked}]
+                     ChestCheckAmount: [{ChestCheckAmount}]
+                     CharactersBeaten: [{CharactersBeaten.Count}]
+                     StagesBeaten: [{StagesBeaten.Count}]
+                     EnemysanityEnabled: [{EnemysanityEnabled}]
+                     GoalRequirement: [{GoalRequirement}]
+                     StagesToBeatForDirector: [{StagesToBeatForDirector}]
+                     """);
+
+            if (StagesToBeat.Length > StagesBeaten.Count && GoalRequirement is GoalRequirement.StageHunt)
+            {
+                Log.Msg($"Stages left to beat: \n - {string.Join("\n - ", StagesToBeat.Except(StagesBeaten))}");
+            }
+            
             foreach (var stage in StagesBeaten)
             {
                 AddLocationToQueue($"{StageTypeToName[stage]} Beaten");
@@ -156,10 +174,7 @@ public static class APSurvivorClient
         Log.Msg("Connected");
     }
 
-    public static bool IsConnected()
-    {
-        return Client is not null && Client.IsConnected;
-    }
+    public static bool IsConnected() { return Client is not null && Client.IsConnected; }
 
     public static void Update()
     {

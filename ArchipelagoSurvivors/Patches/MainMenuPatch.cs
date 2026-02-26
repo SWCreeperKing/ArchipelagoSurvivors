@@ -18,6 +18,7 @@ using Random = System.Random;
 
 namespace ArchipelagoSurvivors.Patches;
 
+[PatchAll]
 public static class MainMenuPatch
 {
     // public static GameObject ConnectButton;
@@ -27,18 +28,19 @@ public static class MainMenuPatch
     [HarmonyPatch(typeof(MainMenuPage), "Start"), HarmonyPostfix]
     public static void HideButtons(MainMenuPage __instance)
     {
-        var container = __instance.GetChild(2);
+        var container = __instance.GetChild(5);
         StartButton = container.GetChild(0);
-        BestiaryButton = container.GetChild(5);
-
+        BestiaryButton = container.GetChild(6);
+        
         if (Random.Shared.Next(100) == 42)
         {
             StartButton.GetChild(0).GetComponent<TextMeshProUGUI>().text = "FISH";
             Log.Msg("FISH");
         }
-
+        
         container.GetChild(1).AddComponent<Invisinator>(); // quick start button
-        container.GetChild(12).AddComponent<Invisinator>(); // adventure button
+        container.GetChild(2).AddComponent<Invisinator>(); // online button
+        container.GetChild(13).AddComponent<Invisinator>(); // adventure button
         __instance.gameObject.AddComponent<APGui>();
 
         // var startButtonRectTransform = StartButton.GetComponent<RectTransform>();

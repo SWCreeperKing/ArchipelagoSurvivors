@@ -12,6 +12,7 @@ using Object = UnityEngine.Object;
 
 namespace ArchipelagoSurvivors.Patches;
 
+[PatchAll]
 public static class SurvivorScreenPatch
 {
     public static List<CharacterType> AllowedCharacters = [];
@@ -83,6 +84,12 @@ public static class SurvivorScreenPatch
                                         .GetChild(0)
                                         .GetComponentsInChildren<StageItemUI>())
         {
+            if (!StageTypeToName.ContainsKey(stage.Type))
+            {
+                stage.gameObject.SetActive(false);
+                continue;
+            }
+            
             var hasBeaten = !StagesBeaten.Contains(stage.Type);
             var stageName = StageTypeToName[stage.Type];
 

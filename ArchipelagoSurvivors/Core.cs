@@ -1,4 +1,6 @@
 ﻿using ArchipelagoSurvivors.Patches;
+using CreepyUtil.Archipelago.ApClient;
+using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppVampireSurvivors.Data;
 using MelonLoader;
@@ -6,8 +8,9 @@ using UnityEngine;
 using static ArchipelagoSurvivors.InformationTransformer;
 using static ArchipelagoSurvivors.Patches.EnemyCounterPatch;
 
-[assembly: MelonInfo(typeof(ArchipelagoSurvivors.Core), "ArchipelagoSurvivors", "1.0.0", "SW_CreeperKing", null)]
+[assembly: MelonInfo(typeof(ArchipelagoSurvivors.Core), "ArchipelagoSurvivors", "0.0.1", "SW_CreeperKing", null)]
 [assembly: MelonGame("poncle", "Vampire Survivors")]
+[assembly: MelonOptionalDependencies("SurvivorModMenu")] // https://github.com/takacomic/SurvivorModMenu
 
 namespace ArchipelagoSurvivors;
 
@@ -44,12 +47,27 @@ public class Core : MelonMod
         //     }
         // }
 
-        HarmonyInstance.PatchAll(typeof(SurvivorScreenPatch));
-        HarmonyInstance.PatchAll(typeof(ChestPickupPatch));
-        HarmonyInstance.PatchAll(typeof(EnemyCounterPatch));
-        HarmonyInstance.PatchAll(typeof(MainMenuPatch));
-        HarmonyInstance.PatchAll(typeof(PlayerPatch));
+        StageNameToType = new Dictionary<string, StageType>();
 
+        foreach (var kv in StageTypeToName)
+        {
+            StageNameToType[kv.Value] = kv.Key;
+        }
+        
+
+        var classesToPatch = MelonAssembly.Assembly.GetTypes()
+                                          .Where(t => t.GetCustomAttributes(typeof(PatchAllAttribute), false).Any())
+                                          .ToArray();
+
+        Log.Msg($"Loading [{classesToPatch.Length}] Class patches");
+
+        foreach (var patch in classesToPatch)
+        {
+            HarmonyInstance.PatchAll(patch);
+
+            Log.Msg($"Loaded: [{patch.Name}]");
+        }
+        
         LoggerInstance.Msg("Initialized.");
     }
 
@@ -243,6 +261,16 @@ public class Core : MelonMod
         
         Log.Msg($"Parsed [BlacklistedEnemyTypes] list, Element Count: [{EnemyTypes.Count}]");
     }
+
+    public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+    {
+        switch (sceneName)
+        {
+            case "MainMenu":
+                
+                break;
+        }
+    }
 }
 
 public readonly struct EnemySheetData(EnemyType enemyType, string frequency, StageType stageType, bool requireHurry)
@@ -252,3 +280,6 @@ public readonly struct EnemySheetData(EnemyType enemyType, string frequency, Sta
     public readonly StageType StageType = stageType;
     public readonly bool RequireHurry = requireHurry;
 }
+
+[AttributeUsage(AttributeTargets.Class)]
+public class PatchAllAttribute : Attribute;

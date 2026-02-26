@@ -13,6 +13,7 @@ using CharacterController = Il2CppVampireSurvivors.Objects.Characters.CharacterC
 
 namespace ArchipelagoSurvivors.Patches;
 
+[PatchAll]
 public class PlayerPatch
 {
     public static string[] DeathlinkMessages =
@@ -29,58 +30,6 @@ public class PlayerPatch
     public static List<CharacterType> CharactersBeaten = [];
     public static int LastMinuteCheck = -1;
     public static bool DeathIsQueued;
-    public static bool Warning;
-
-    [HarmonyPatch(typeof(CharacterController), "OnUpdate"), HarmonyPostfix]
-    public static void OnUpdate(CharacterController __instance)
-    {
-        var currentMinute = GM.Core.Stage.CurrentMinute;
-
-        if (LastMinuteCheck == -1)
-        {
-            LastMinuteCheck = 0;
-            Log.Msg($"stage loop time: [{GM.Core.Stage._maxStageDataMinute}]");
-        }
-
-        if (LastMinuteCheck <= currentMinute && GM.Core.Stage._maxStageDataMinute > currentMinute)
-        {
-            LastMinuteCheck = currentMinute;
-            return;
-        }
-
-        if (Client is null) return;
-        if (IsHurryLocked)
-        {
-            if (Warning) return;
-            Warning = true;
-            Log.Msg(ConsoleColor.Yellow,
-                "You do not have hurry unlocked so `Beat with [character]` and `[stage] beaten` checks are locked");
-            return;
-        }
-
-        if (!CharactersBeaten.Contains(__instance.CharacterType))
-        {
-            if (CharacterTypeToName.TryGetValue(__instance.CharacterType, out var value))
-            {
-                Log.Msg("beat with check");
-                AddLocationToQueue($"Beat with {value}");
-                CharactersBeaten.Add(__instance.CharacterType);
-                Client.SendToStorage("characters_completed",
-                    CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray());
-            }
-        }
-
-        if (!StagesBeaten.Contains(GM.Core.Stage.StageType))
-        {
-            Log.Msg("beaten check");
-            AddLocationToQueue($"{StageTypeToName[GM.Core.Stage.StageType]} Beaten");
-            StagesBeaten.Add(GM.Core.Stage.StageType);
-            Client.SendToStorage("levels_completed", StagesBeaten.Select(st => StageTypeToName[st]).ToArray());
-            if (StagesBeaten.Count != StagesToBeat.Length ||
-                Client.HasGoaled || APSurvivorClient.GoalRequirement != StageHunt) return;
-            Client.Goal();
-        }
-    }
 
     [HarmonyPatch(typeof(CharacterController), "InitCharacter"),
      HarmonyPostfix]
@@ -88,7 +37,6 @@ public class PlayerPatch
         CharacterType characterType, int playerIndex, bool dontGetCharacterDataForCurrentLevel)
     {
         DeathIsQueued = false;
-        Warning = false;
     }
 
     [HarmonyPatch(typeof(CharacterController), "OnDeath"), HarmonyPostfix]

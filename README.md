@@ -34,6 +34,8 @@
 
 (tutorial totally not copy and pasted from Tunic AP mod and BTD6 Mod helper)
 
+[Downpatching Instructions](https://archipelago.miraheze.org/wiki/Vampire_Survivors)
+
 - Make sure to have [.Net6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) installed
 - Download and Install [Melon Loader](https://melonwiki.xyz/#/?id=automated-installation).
     - The default Vampire Survivors install directory (for steam): C:\Program Files (x86)\Steam\steamapps\common\Vampire Survivors

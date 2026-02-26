@@ -5,6 +5,16 @@ using static Il2CppVampireSurvivors.Data.StageType;
 
 namespace ArchipelagoSurvivors;
 
+public class test(string name) : Attribute
+{
+    public readonly string Name = name;
+}
+
+public enum e {
+    [test("abc")]  a,
+    [test("bca")]  b
+}
+
 public static class InformationTransformer
 {
     public static readonly Dictionary<StageType, string> StageTypeToName = new()
@@ -19,7 +29,12 @@ public static class InformationTransformer
         [FB_HIGHWAY] = "Hectic Highway", [TP_CASTLE] = "Ode to Castlevania", [EMERALD] = "Emerald Diorama",
     };
 
-    public static readonly Dictionary<string, StageType> StageNameToType =
+    public static string GetName(this StageType enums)
+    {
+        return StageTypeToName[enums];
+    }
+
+    public static Dictionary<string, StageType> StageNameToType =
         StageTypeToName.ToDictionary(kv => kv.Value, kv => kv.Key);
 
     public static readonly Dictionary<CharacterType, string> CharacterTypeToName = new()
