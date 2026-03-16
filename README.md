@@ -1,3 +1,7 @@
+Help support me, this and future projects on [Patreon](https://www.patreon.com/c/SW_CreeperKing)
+
+---
+
 ## Randomizer Info BEFORE INSTALLING
 
 ### DISCLAIMER: THIS MOD WILL >>NOT<< GIVE YOU THE PAID DLC FOR FREE
@@ -5,9 +9,10 @@
 > [!Note]
 > Other mods might cause problems
 
-> [!Note]
+> [!Warning]
 > It's advised to get a decent amount of vanilla content done beforehand, you can set what characters and stages you
 > have available to you in the yaml
+> YOU HAVE BEEN WARNED
 
 ## Features/Information
 
@@ -34,32 +39,23 @@
 
 (tutorial totally not copy and pasted from Tunic AP mod and BTD6 Mod helper)
 
-[Downpatching Instructions](https://archipelago.miraheze.org/wiki/Vampire_Survivors)
-
 - Make sure to have [.Net6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) installed
 - Download and Install [Melon Loader](https://melonwiki.xyz/#/?id=automated-installation).
     - The default Vampire Survivors install directory (for steam): C:\Program Files (x86)\Steam\steamapps\common\Vampire Survivors
-    - Recommended melon version: 7.1
+    - Require melon loader version: 7.2
 - Launch the game and close it. This will finalize the Melon installation.
 - Download and extract the `SW_CreeperKing.ArchipelagoSurvivors.zip` from
   the [latest release page](https://github.com/SWCreeperKing/ArchipelagoSurvivors/releases/latest).
-    - Copy the `SW_CreeperKing.ArchipelagoSurvivors` folder from the release zip into `Mods` under your game's install directory.
+    - Copy everything from the extracted `ArchipelagoSurvivors` into your game's install directory.
 - Launch the game again and you should see the connection input on the top left of the title screen!
 - To uninstall the mod, either remove/delete the `SW_CreeperKing.ArchipelagoSurvivors` folder
-
->[!Important]
->Downpatching is required, instructions can be found on the [Archipelago Wiki](https://archipelago.miraheze.org/wiki/Vampire_Survivors)
-
-> [!Note]
-> When downpatching and messing with melon install/reinstall/uninstall
-> Double/triple/quadruple check the mod folder, melon might rename it to `~SW_CreeperKing.ArchipelagoSurvivors`
-> which will prevent the mod from loading correctly
 
 ---
 
 # Special Thanks
 
 - Sterlia for being my 'logic slave'
+- data-bomb for https://github.com/data-bomb/FixNullableAttribute/blob/main/FixNullableAttribute.cs
 
 ---
 
@@ -69,8 +65,3 @@
 - Rider
 - UnityExplorer
 - [Vampire Survivors Modding Docs](https://github.com/lukeod/vampiresurvivors-modding)
-
----
-
-# Support:
-[Patreon](https://www.patreon.com/c/SW_CreeperKing)
