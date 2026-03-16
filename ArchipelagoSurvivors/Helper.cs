@@ -1,9 +1,13 @@
+using Il2CppVampireSurvivors.Data;
 using UnityEngine;
+using static ArchipelagoSurvivors.Core;
 
 namespace ArchipelagoSurvivors;
 
 public static class Helper
 {
+    public static List<EnemyType> EnemyTypes = [];
+    
     public static GameObject[] GetChildren(this GameObject gobj)
     {
         var transform = gobj.transform;
@@ -32,4 +36,26 @@ public static class Helper
 
     public static GameObject GetParent<TMonoBehavior>(this TMonoBehavior behavior) where TMonoBehavior : MonoBehaviour
         => behavior.transform.parent.gameObject;
+    
+    public static string GetName(this EnemyType enemyType)
+    {
+        var ogType = enemyType;
+        string enemyName;
+        while (!EnemyTypeToName.TryGetValue(enemyType, out enemyName))
+        {
+            if (EnemyVariantListings.TryGetValue(enemyType, out var potentialType))
+            {
+                enemyType = potentialType;
+                continue;
+            }
+
+            if (EnemyTypes.Contains(enemyType)) return "";
+            EnemyTypes.Add(enemyType);
+            Log.Error(
+                $"New enemy encounter: [{ogType}] -> [{enemyType}]"
+            );
+            return "";
+        }
+        return enemyName;
+    }
 }

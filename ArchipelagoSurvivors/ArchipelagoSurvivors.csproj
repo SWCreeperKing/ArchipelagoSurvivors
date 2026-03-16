@@ -638,7 +638,6 @@
 		<Compile Include="Core.cs" />
 		<Compile Include="FixNullableAttribute.cs" />
 		<Compile Include="Helper.cs" />
-		<Compile Include="InformationTransformer.cs" />
 		<Compile Include="Invisinator.cs" />
 		<Compile Include="Patches\ChestPickupPatch.cs" />
 		<Compile Include="Patches\EnemyCounterPatch.cs" />

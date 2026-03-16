@@ -1,18 +1,12 @@
-using System.Text;
 using HarmonyLib;
-using Il2CppDreamteck.Splines.Primitives;
 using Il2CppTMPro;
 using Il2CppVampireSurvivors;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Data.Enemies;
-using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.UI;
-using MelonLoader;
 using UnityEngine;
-using UnityEngine.UI;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
-using static ArchipelagoSurvivors.InformationTransformer;
 using static ArchipelagoSurvivors.Patches.EnemyCounterPatch;
 using Random = System.Random;
 
@@ -21,9 +15,10 @@ namespace ArchipelagoSurvivors.Patches;
 [PatchAll]
 public static class MainMenuPatch
 {
-    // public static GameObject ConnectButton;
     public static GameObject StartButton;
     public static GameObject BestiaryButton;
+    public static EnemyType[] Unknown;
+    public static Dictionary<EnemyType, string> Names = [];
 
     [HarmonyPatch(typeof(MainMenuPage), "Start"), HarmonyPostfix]
     public static void HideButtons(MainMenuPage __instance)
@@ -42,16 +37,6 @@ public static class MainMenuPatch
         container.GetChild(2).AddComponent<Invisinator>(); // online button
         container.GetChild(13).AddComponent<Invisinator>(); // adventure button
         __instance.gameObject.AddComponent<APGui>();
-
-        // var startButtonRectTransform = StartButton.GetComponent<RectTransform>();
-        // var startButtonButton = StartButton.GetComponent<Button>();
-        // var startButtonImage = StartButton.GetComponent<Image>();
-        //
-        // ConnectButton = new GameObject("Connect Button");
-        // ConnectButton.transform.SetParent(container.transform);
-        // var connectButtonRectTransform = ConnectButton.AddComponent<RectTransform>();
-        // var connectButtonButton = ConnectButton.AddComponent<Button>();
-        // var connectButtonImage = ConnectButton.AddComponent<Image>();
     }
 
     [HarmonyPatch(typeof(EnemyItemUI), "SetData"), HarmonyPrefix]
@@ -61,48 +46,28 @@ public static class MainMenuPatch
         hasKilled = true;
     }
 
-    // private static StringBuilder sb = new();
-    // private static StringBuilder sb2 = new();
-
     [HarmonyPatch(typeof(EnemyItemUI), "SetData"), HarmonyPostfix]
     public static void BestiarySetData(EnemyItemUI __instance, EnemyType type, int count, EnemyData dat,
         BestiaryPage page, bool hasKilled)
     {
-        __instance.gameObject.SetActive(false);
-        // var enemySpawnList = __instance._data.bPlaces._items.Select(st => StageTypeToName[st]).ToList();
-        //
-        // int i;
-        // while ((i = enemySpawnList.FindLastIndex(s => s == "Mad Forest")) > 0)
-        // {
-        //     enemySpawnList.RemoveAt(i);
-        // }
-        
-        // sb.Append($"\"{__instance._Name.text}\": [{string.Join(", ", enemySpawnList.Select(s => $"\"{s}\""))}],\n");
-        // sb2.Append($"[{type}] = \"{__instance._Name.text.Trim()}\",\n");
-        if (Client is null) return;
+        try
+        {;
+            var enemyType = __instance._type;
+            var enemyName = enemyType.GetName();
+            if (enemyName is "") return;
+            __instance.gameObject.SetActive(false);
 
-        var enemyType = __instance._type;
-        if (EnemyVariantListings.TryGetValue(enemyType, out var potentialType)) enemyType = potentialType;
-        
-        if (!EnemyTypeToName.TryGetValue(enemyType, out var enemyName))
-        {
-            if (EnemyTypes.Contains(enemyType)) return;
-            EnemyTypes.Add(enemyType);
-            Log.Error($"New BESTIARY enemy encounter: ({__instance._Name.text}) [{enemyType}]");
-            return;
+            if (Unknown is not null && Unknown.Contains(enemyType)) Names[enemyType] = __instance._Name.text;
+            if (Client is null) return;
+            
+            if (!EnemysanityEnabled) return;
+            var killed = !Client.MissingLocations.Contains($"Kill {enemyName}");
+            __instance._Name.text = $"[Unkilled] {__instance._Name.text}";
+            __instance.gameObject.SetActive(!killed);
         }
-
-        if (!Client.Locations.TryGetValue($"Kill {enemyName}", out _)) return;
-        
-        var killed = Client.MissingLocations.Contains($"Kill {enemyName}");
-        __instance._Name.text = $"[{(killed ? "Killed" : "Unkilled")}] {__instance._Name.text}";
-        __instance.gameObject.SetActive(!killed);
-
-        // if (type == EnemyType.EME_GATEBOSS_LIVINGANGUISH)
-        // {
-        //     Log.Msg(sb.ToString());
-        //     File.WriteAllText("Enemy List.txt", sb.ToString());
-        //     // File.WriteAllText("Enemy Name List.txt", sb2.ToString());
-        // }
+        catch(Exception e)
+        {
+            Log.Msg(e);
+        }
     }
 }

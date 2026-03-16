@@ -1,13 +1,6 @@
 using HarmonyLib;
-using Il2CppSystem.Text;
 using Il2CppVampireSurvivors.Data;
-using Il2CppVampireSurvivors.Framework;
-using Il2CppVampireSurvivors.Framework.Saves;
-using Il2CppVampireSurvivors.Objects;
 using static ArchipelagoSurvivors.APSurvivorClient;
-using static ArchipelagoSurvivors.Core;
-using static ArchipelagoSurvivors.GoalRequirement;
-using static ArchipelagoSurvivors.InformationTransformer;
 using static CreepyUtil.Archipelago.ArchipelagoTag;
 using CharacterController = Il2CppVampireSurvivors.Objects.Characters.CharacterController;
 

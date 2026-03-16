@@ -1,14 +1,10 @@
 using HarmonyLib;
-using Il2CppPlayFab.Internal;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.UI;
 using UnityEngine;
-using UnityEngine.UI;
 using static ArchipelagoSurvivors.APSurvivorClient;
-using static ArchipelagoSurvivors.InformationTransformer;
+using static ArchipelagoSurvivors.Core;
 using static ArchipelagoSurvivors.Patches.PlayerPatch;
-using Il2CppGeneric = Il2CppSystem.Collections.Generic;
-using Object = UnityEngine.Object;
 
 namespace ArchipelagoSurvivors.Patches;
 
@@ -37,15 +33,9 @@ public static class SurvivorScreenPatch
     [HarmonyPatch(typeof(CharacterSelectionPage), "Update"), HarmonyPostfix]
     public static void OverrideCharacter(CharacterSelectionPage __instance)
     {
-        if (ChestPickupPatch.ChestsOpened != 0)
-        {
-            ChestPickupPatch.ChestsOpened = 0;
-        }
+        if (ChestPickupPatch.ChestsOpened != 0) { ChestPickupPatch.ChestsOpened = 0; }
 
-        if (LastMinuteCheck != -1)
-        {
-            LastMinuteCheck = -1;
-        }
+        if (LastMinuteCheck != -1) { LastMinuteCheck = -1; }
 
         EggController.Update();
 
@@ -89,7 +79,7 @@ public static class SurvivorScreenPatch
                 stage.gameObject.SetActive(false);
                 continue;
             }
-            
+
             var hasBeaten = !StagesBeaten.Contains(stage.Type);
             var stageName = StageTypeToName[stage.Type];
 
@@ -118,11 +108,18 @@ public static class SurvivorScreenPatch
                 {
                     rawEnemyChecksMissing = rawEnemyChecksMissing
                                            .Where(et => !EnemyHurryStages.ContainsKey(et) ||
-                                                        !EnemyHurryStages[et].Contains(stage.Type))
+                                                        !EnemyHurryStages[et].Contains(stage.Type)
+                                            )
                                            .ToArray();
                 }
 
-                var enemyChecksMissing = rawEnemyChecksMissing.Select(et => EnemyTypeToName[et]).ToArray();
+                if (IsArcanasLocked)
+                {
+                    rawEnemyChecksMissing = rawEnemyChecksMissing
+                                           .Where(et => EnemyArcanaList.Contains(et)).ToArray();
+                }
+
+                var enemyChecksMissing = rawEnemyChecksMissing.Select(et => et.GetName()).ToArray();
 
                 if (chestChecksMissing.Any())
                 {
@@ -132,10 +129,7 @@ public static class SurvivorScreenPatch
                 {
                     stage.DescriptionText.text = $"Enemy Checks Remaining:\n{string.Join(", ", enemyChecksMissing)}";
                 }
-                else
-                {
-                    stage.DescriptionText.text = "All Chest and Enemy Checks Got!";
-                }
+                else { stage.DescriptionText.text = "All Chest and Enemy Checks Got!"; }
             }
 
             if (stage.Type != StageType.MACHINE ||
@@ -160,7 +154,7 @@ public class TickBoxController
             "hyper" => !IsHyperLocked,
             "arcanas" => !IsArcanasLocked,
             "eggs" => !IsEggesLocked,
-            _ => false
+            _ => false,
         };
 
     private TickBoxUI Box = null;
@@ -174,15 +168,9 @@ public class TickBoxController
 
     public void Update()
     {
-        if (!Enabled && Box.isOn)
-        {
-            Box.isOn = false;
-        }
+        if (!Enabled && Box.isOn) { Box.isOn = false; }
 
-        if (Enabled != Gobj.activeSelf)
-        {
-            Gobj.SetActive(Enabled);
-        }
+        if (Enabled != Gobj.activeSelf) { Gobj.SetActive(Enabled); }
     }
 
     public static implicit operator TickBoxController(GameObject gobj) => new(gobj);

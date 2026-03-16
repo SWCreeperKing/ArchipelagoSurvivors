@@ -5,7 +5,6 @@ using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.Objects;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
-using static ArchipelagoSurvivors.InformationTransformer;
 using static ArchipelagoSurvivors.Patches.PlayerPatch;
 
 namespace ArchipelagoSurvivors.Patches;
@@ -13,7 +12,6 @@ namespace ArchipelagoSurvivors.Patches;
 [PatchAll]
 public static class StageEndPatch
 {
-    // [HarmonyPatch(typeof(StageEventManager), "PlayCycleComplete"), HarmonyPostfix]
     [HarmonyPatch(typeof(StageEventManager), "TriggerEvent"), HarmonyPostfix]
     public static void Win(Event stageDataEvent)
     {

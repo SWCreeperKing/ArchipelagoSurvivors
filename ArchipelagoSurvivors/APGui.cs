@@ -4,6 +4,7 @@ using Il2CppVampireSurvivors.Data.Weapons;
 using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.Framework.Saves;
 using MelonLoader;
+using Unity.Collections;
 using UnityEngine;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
@@ -133,6 +134,7 @@ public class APGui : MonoBehaviour
         if (IsConnected() && GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 180, 30), "Disconnect"))
         {
             Disconnect();
+            File.WriteAllLines("ENEMY NAME TYPES.txt", MainMenuPatch.Names.Select(kv => $"{(kv.Value.Contains(',') ? $"\"{kv.Value}\"" : kv.Value)}, {kv.Key}"));
         }
 
         GUI.Label(new Rect(20 + Offset.x, 240 + Offset.y, 300, 30),

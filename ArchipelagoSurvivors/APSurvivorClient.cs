@@ -4,10 +4,8 @@ using CreepyUtil.Archipelago;
 using CreepyUtil.Archipelago.ApClient;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Framework;
-using MelonLoader;
 using UnityEngine;
 using static ArchipelagoSurvivors.Core;
-using static ArchipelagoSurvivors.InformationTransformer;
 using static ArchipelagoSurvivors.Patches.PlayerPatch;
 using static ArchipelagoSurvivors.Patches.SurvivorScreenPatch;
 

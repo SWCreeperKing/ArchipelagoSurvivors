@@ -2,7 +2,6 @@ using HarmonyLib;
 using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.Objects.Items;
 using static ArchipelagoSurvivors.APSurvivorClient;
-using static ArchipelagoSurvivors.InformationTransformer;
 
 namespace ArchipelagoSurvivors.Patches;
 
@@ -18,6 +17,6 @@ public static class ChestPickupPatch
         ChestsOpened++;
         if (ChestsOpened > ChestCheckAmount) return;
 
-        AddLocationToQueue($"Open Chest #{ChestsOpened} on {StageTypeToName[stageType]}");
+        AddLocationToQueue($"Open Chest #{ChestsOpened} on {Core.StageTypeToName[stageType]}");
     }
 }
