@@ -44,7 +44,7 @@ Help support me, this and future projects on [Patreon](https://www.patreon.com/c
     - The default Vampire Survivors install directory (for steam): C:\Program Files (x86)\Steam\steamapps\common\Vampire Survivors
     - Require melon loader version: 7.2
 - Launch the game and close it. This will finalize the Melon installation.
-- Download and extract the `SW_CreeperKing.ArchipelagoSurvivors.zip` from
+- Download and extract the `ArchipelagoSurvivors.zip` from
   the [latest release page](https://github.com/SWCreeperKing/ArchipelagoSurvivors/releases/latest).
     - Copy everything from the extracted `ArchipelagoSurvivors` into your game's install directory.
 - Launch the game again and you should see the connection input on the top left of the title screen!
