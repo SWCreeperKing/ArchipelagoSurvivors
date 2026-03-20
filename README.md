@@ -50,6 +50,13 @@ Help support me, this and future projects on [Patreon](https://www.patreon.com/c
 - Launch the game again and you should see the connection input on the top left of the title screen!
 - To uninstall the mod, either remove/delete the `SW_CreeperKing.ArchipelagoSurvivors` folder
 
+### Compatibility for the client to play with worlds genned with v0.2:
+1. it will create a `Compatibility.txt` in `Mods/SW_CreeperKing.ArchipelagoSurvivors/Data`
+2. inside it should have `incorrect name =`
+3. just add the correct name after it
+4. save
+5. relaunch the game
+
 ---
 
 # Special Thanks

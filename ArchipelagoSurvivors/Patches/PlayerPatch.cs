@@ -24,10 +24,11 @@ public class PlayerPatch
     public static int LastMinuteCheck = -1;
     public static bool DeathIsQueued;
 
-    [HarmonyPatch(typeof(CharacterController), "InitCharacter"),
-     HarmonyPostfix]
-    public static void Init(CharacterController __instance,
-        CharacterType characterType, int playerIndex, bool dontGetCharacterDataForCurrentLevel)
+    [HarmonyPatch(typeof(CharacterController), "InitCharacter"), HarmonyPostfix]
+    public static void Init(
+        CharacterController __instance, CharacterType characterType, int playerIndex,
+        bool dontGetCharacterDataForCurrentLevel
+    )
     {
         DeathIsQueued = false;
     }

@@ -37,15 +37,15 @@ public static class Helper
     public static GameObject GetParent<TMonoBehavior>(this TMonoBehavior behavior) where TMonoBehavior : MonoBehaviour
         => behavior.transform.parent.gameObject;
     
-    public static string GetName(this EnemyType enemyType)
+    public static string GetName(this EnemyType enemyType, out EnemyType type)
     {
-        var ogType = enemyType;
+        var ogType = type = enemyType;
         string enemyName;
         while (!EnemyTypeToName.TryGetValue(enemyType, out enemyName))
         {
             if (EnemyVariantListings.TryGetValue(enemyType, out var potentialType))
             {
-                enemyType = potentialType;
+                enemyType = type = potentialType;
                 continue;
             }
 
@@ -56,6 +56,7 @@ public static class Helper
             );
             return "";
         }
+        type = enemyType;
         return enemyName;
     }
 }

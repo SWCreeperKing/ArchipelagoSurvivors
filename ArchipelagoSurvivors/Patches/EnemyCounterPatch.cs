@@ -22,8 +22,7 @@ public static class EnemyCounterPatch
         {
             if (!EnemysanityEnabled) return;
 
-            var enemyType = __instance.EnemyType;
-            var enemyName = enemyType.GetName();
+            var enemyName = __instance.EnemyType.GetName(out var enemyType);
             if (enemyName is "") return;
 
             if (!EnemyStages.ContainsKey(enemyType))
@@ -37,7 +36,12 @@ public static class EnemyCounterPatch
             }
 
             var stage = GM.Core.Stage.StageType;
-            if (!EnemyStages[enemyType].Contains(stage)) return;
+            if (!EnemyStages[enemyType].Contains(stage))
+            {
+                Log.Warning($"Enemy [{enemyType}] killed on [{stage}]???, not listed, report please");
+                return;
+            }
+            
             if (EnemyHurryStages.ContainsKey(enemyType) && IsHurryLocked && EnemyHurryStages[enemyType].Contains(stage))
             {
                 var hash = HashCode.Combine(enemyType, stage);

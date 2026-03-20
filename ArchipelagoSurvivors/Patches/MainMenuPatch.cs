@@ -52,8 +52,7 @@ public static class MainMenuPatch
     {
         try
         {;
-            var enemyType = __instance._type;
-            var enemyName = enemyType.GetName();
+            var enemyName = __instance._type.GetName(out var enemyType);
             if (enemyName is "") return;
             __instance.gameObject.SetActive(false);
 

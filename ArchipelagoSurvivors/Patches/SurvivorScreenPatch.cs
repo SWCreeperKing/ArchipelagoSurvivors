@@ -119,7 +119,7 @@ public static class SurvivorScreenPatch
                                            .Where(et => EnemyArcanaList.Contains(et)).ToArray();
                 }
 
-                var enemyChecksMissing = rawEnemyChecksMissing.Select(et => et.GetName()).ToArray();
+                var enemyChecksMissing = rawEnemyChecksMissing.Select(et => et.GetName(out _)).ToArray();
 
                 if (chestChecksMissing.Any())
                 {

@@ -24,6 +24,7 @@ public class Core : MelonMod
     public static Dictionary<EnemyType, EnemyType> EnemyVariantListings;
     public static Dictionary<EnemyType, StageType[]> EnemyStages;
     public static Dictionary<EnemyType, StageType[]> EnemyHurryStages;
+    public static Dictionary<string, string> CompatibilityConversions = [];
     public static EnemyType[] EnemyArcanaList;
 
     public override void OnInitializeMelon()
@@ -70,8 +71,17 @@ public class Core : MelonMod
         EnemyHurryStages = ReadEnemyMapFile("EnemyHurryMap");
         Log.Msg("Read Play by Play (Hurry) Data");
 
-        EnemyArcanaList = File.ReadAllLines($"{DataFolder}/ArcanaEnemyList.txt").Select(s => Enum.Parse<EnemyType>(s)).ToArray();
+        EnemyArcanaList = File.ReadAllLines($"{DataFolder}/ArcanaEnemyList.txt").Select(s => Enum.Parse<EnemyType>(s))
+                              .ToArray();
         Log.Msg("Read Arcana Enemy");
+
+        if (File.Exists($"{DataFolder}/Compatibility.txt"))
+        {
+            CompatibilityConversions = File.ReadAllLines($"{DataFolder}/Compatibility.txt")
+                                           .Select(line => line.Split('='))
+                                           .ToDictionary(arr => arr[0].Trim(), arr => arr[1].Trim());
+            Log.Msg("Read Compatibility Conversions");
+        }
 
         Log.Msg($"Loading [{classesToPatch.Length}] Class patches");
 

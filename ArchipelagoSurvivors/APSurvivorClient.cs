@@ -19,6 +19,7 @@ public enum GoalRequirement
 
 internal static class APSurvivorClient
 {
+    private static List<string> SentAlready = [];
     private static HashSet<string> ChecksToSend = [];
     public static ConcurrentQueue<string> ChecksToSendQueue = [];
     public static ApClient? Client;
@@ -41,11 +42,14 @@ internal static class APSurvivorClient
     {
         try
         {
+            SentAlready.Clear();
             Client = new ApClient(new TimeSpan(0, 1, 0));
             Log.Msg($"Attempting to connect [{address}]:[{port}] [{password}] [{slot}]");
 
-            var connectError = Client.TryConnect(new LoginInfo(port, slot, address, password), "Vampire Survivors",
-                ItemsHandlingFlags.AllItems, requestSlotData: true);
+            var connectError = Client.TryConnect(
+                new LoginInfo(port, slot, address, password), "Vampire Survivors",
+                ItemsHandlingFlags.AllItems, requestSlotData: true
+            );
 
             if (connectError is not null && connectError.Length > 0)
             {
@@ -111,31 +115,30 @@ internal static class APSurvivorClient
                 ? (long)goalstagerequirement
                 : 0;
 
-            Log.Msg($"""
-                     StartingStage: [{StartingStage}]
-                     StartingCharacter: [{StartingCharacter}]
-                     StagesToBeat: [{StagesToBeat.Length}]
-                     IsHyperLocked: [{IsHyperLocked}]
-                     IsHurryLocked: [{IsHurryLocked}]
-                     IsArcanasLocked: [{IsArcanasLocked}]
-                     IsEggesLocked: [{IsEggesLocked}]
-                     ChestCheckAmount: [{ChestCheckAmount}]
-                     CharactersBeaten: [{CharactersBeaten.Count}]
-                     StagesBeaten: [{StagesBeaten.Count}]
-                     EnemysanityEnabled: [{EnemysanityEnabled}]
-                     GoalRequirement: [{GoalRequirement}]
-                     StagesToBeatForDirector: [{StagesToBeatForDirector}]
-                     """);
+            Log.Msg(
+                $"""
+                 StartingStage: [{StartingStage}]
+                 StartingCharacter: [{StartingCharacter}]
+                 StagesToBeat: [{StagesToBeat.Length}]
+                 IsHyperLocked: [{IsHyperLocked}]
+                 IsHurryLocked: [{IsHurryLocked}]
+                 IsArcanasLocked: [{IsArcanasLocked}]
+                 IsEggesLocked: [{IsEggesLocked}]
+                 ChestCheckAmount: [{ChestCheckAmount}]
+                 CharactersBeaten: [{CharactersBeaten.Count}]
+                 StagesBeaten: [{StagesBeaten.Count}]
+                 EnemysanityEnabled: [{EnemysanityEnabled}]
+                 GoalRequirement: [{GoalRequirement}]
+                 StagesToBeatForDirector: [{StagesToBeatForDirector}]
+                 """
+            );
 
             if (StagesToBeat.Length > StagesBeaten.Count && GoalRequirement is GoalRequirement.StageHunt)
             {
                 Log.Msg($"Stages left to beat: \n - {string.Join("\n - ", StagesToBeat.Except(StagesBeaten))}");
             }
-            
-            foreach (var stage in StagesBeaten)
-            {
-                AddLocationToQueue($"{StageTypeToName[stage]} Beaten");
-            }
+
+            foreach (var stage in StagesBeaten) { AddLocationToQueue($"{StageTypeToName[stage]} Beaten"); }
 
             Client!.OnDeathLinkPacketReceived += (source, cause) =>
             {
@@ -164,15 +167,15 @@ internal static class APSurvivorClient
 
             Client!.ItemsSentNotification += str => Log.Msg(ConsoleColor.DarkGray, $"Check Sent: [{str}]");
         }
-        catch (Exception e)
-        {
-            Log.Error(e);
-        }
+        catch (Exception e) { Log.Error(e); }
 
         Log.Msg("Connected");
     }
 
-    public static bool IsConnected() { return Client is not null && Client.IsConnected; }
+    public static bool IsConnected()
+    {
+        return Client is not null && Client.IsConnected;
+    }
 
     public static void Update()
     {
@@ -182,25 +185,38 @@ internal static class APSurvivorClient
 
         NextSend -= Time.deltaTime;
         if (DeathlinkCooldown > 0) DeathlinkCooldown -= Time.deltaTime;
-        if (ChecksToSend.Any() && NextSend <= 0)
-        {
-            SendChecks();
-        }
+        if (ChecksToSend.Any() && NextSend <= 0) { SendChecks(); }
 
         var rawNewItems = Client.GetOutstandingItems().ToArray();
         if (rawNewItems.Any())
         {
+            var updateCompatibilityTxt = false;
             var newItems = rawNewItems
                           .Select(item => item?.ItemName!)
                           .ToArray();
 
-            AllowedCharacters.AddRange(newItems.Where(s => s.StartsWith("Character Unlock: "))
-                                               .Select(s =>
-                                                    CharacterNameToType[s[18..]]));
+            AllowedCharacters.AddRange(
+                GetCompatibilityConversion(
+                    "character",
+                    newItems.Where(s => s.StartsWith("Character Unlock: ")).Select(s => s[18..]).ToArray(),
+                    CharacterNameToType, ref updateCompatibilityTxt
+                )
+            );
 
-            AllowedStages.AddRange(newItems.Where(s => s.StartsWith("Stage Unlock: "))
-                                           .Select(s =>
-                                                StageNameToType[s[14..]]));
+            AllowedStages.AddRange(
+                GetCompatibilityConversion(
+                    "stage",
+                    newItems.Where(s => s.StartsWith("Stage Unlock: ")).Select(s => s[14..]).ToArray(),
+                    StageNameToType, ref updateCompatibilityTxt
+                )
+            );
+
+            if (updateCompatibilityTxt)
+            {
+                File.WriteAllLines(
+                    $"{DataFolder}/Compatibility.txt", CompatibilityConversions.Select(kv => $"{kv.Key} = {kv.Value}")
+                );
+            }
 
             foreach (var gamemode in newItems.Where(s => s.StartsWith("Gamemode Unlock: ")).Select(s => s[17..]))
             {
@@ -227,12 +243,55 @@ internal static class APSurvivorClient
             ChecksToSendQueue.TryDequeue(out var location);
             ChecksToSend.Add(location);
         }
+
+        return;
+
+        T[] GetCompatibilityConversion<T>(
+            string kind, string[] potentialItems, Dictionary<string, T> converter, ref bool updateCompatibilityTxt
+        )
+        {
+            List<T> newItems = [];
+
+            foreach (var item in potentialItems)
+            {
+                if (converter.TryGetValue(item, out var value1))
+                {
+                    newItems.Add(value1);
+                    continue;
+                }
+
+                if (CompatibilityConversions.TryGetValue(item, out var value2) && value2 is not "")
+                {
+                    if (converter.TryGetValue(value2, out var value3))
+                    {
+                        newItems.Add(value3);
+                        continue;
+                    }
+
+                    Log.Error($"Value [{value2}] is an incorrect {kind} name");
+                }
+
+                Log.Error(
+                    $"Value [{item}] is an incompatible {kind} name, goto [Vampire Survivors/Mods/SW_CreeperKing.ArchipelagoSurvivors/Data/Compatibility.txt] to fill out the correct name (restart the game to apply)"
+                );
+                CompatibilityConversions[item] = "";
+                updateCompatibilityTxt = true;
+            }
+
+            return newItems.ToArray();
+        }
     }
 
     private static void SendChecks()
     {
         NextSend = 3;
-        Client?.SendLocations(ChecksToSend.ToArray());
+        var toSend = ChecksToSend.Where(check => !SentAlready.Contains(check)).ToArray();
+        SentAlready.AddRange(toSend);
+        if (toSend.Length > 0)
+        {
+            Client?.SendLocations(toSend);
+            Log.Msg($"Checks Sent: [{string.Join(", ", toSend)}]");
+        }
         ChecksToSend.Clear();
     }
 

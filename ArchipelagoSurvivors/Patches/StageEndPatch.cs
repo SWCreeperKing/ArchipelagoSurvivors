@@ -15,45 +15,52 @@ public static class StageEndPatch
     [HarmonyPatch(typeof(StageEventManager), "TriggerEvent"), HarmonyPostfix]
     public static void Win(Event stageDataEvent)
     {
-        var rawEvent = Enum.Parse<StageEventType>(stageDataEvent.eventType);
-        if (rawEvent is not StageEventType.CYCLE_COMPLETE) return;
-
-        if (Client is null) return;
-        if (IsHurryLocked)
+        try
         {
-            Log.Msg(
-                ConsoleColor.Yellow,
-                "You do not have hurry unlocked so `Beat with [character]` and `[stage] beaten` checks are locked"
-            );
-            return;
-        }
+            var rawEvent = Enum.Parse<StageEventType>(stageDataEvent.eventType);
+            if (rawEvent is not StageEventType.CYCLE_COMPLETE) return;
 
-        Log.Msg($"Beat Stage: [{StageTypeToName[GM.Core.Stage.StageType]}]");
-
-        var type = GM.Core.Player.CharacterType;
-        if (!CharactersBeaten.Contains(type))
-        {
-            if (CharacterTypeToName.TryGetValue(type, out var value))
+            if (Client is null) return;
+            if (IsHurryLocked)
             {
-                Log.Msg("beat with check");
-                AddLocationToQueue($"Beat with {value}");
-                CharactersBeaten.Add(type);
-                Client.SendToStorage(
-                    "characters_completed",
-                    CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray()
+                Log.Msg(
+                    ConsoleColor.Yellow,
+                    "You do not have hurry unlocked so `Beat with [character]` and `[stage] beaten` checks are locked"
                 );
+                return;
+            }
+
+            Log.Msg($"Beat Stage: [{StageTypeToName[GM.Core.Stage.StageType]}]");
+
+            var type = GM.Core.Player.CharacterType;
+            if (!CharactersBeaten.Contains(type))
+            {
+                if (CharacterTypeToName.TryGetValue(type, out var value))
+                {
+                    Log.Msg("beat with check");
+                    AddLocationToQueue($"Beat with {value}");
+                    CharactersBeaten.Add(type);
+                    Client.SendToStorage(
+                        "characters_completed",
+                        CharactersBeaten.Select(ct => CharacterTypeToName[ct]).ToArray()
+                    );
+                }
+            }
+
+            if (!StagesBeaten.Contains(GM.Core.Stage.StageType))
+            {
+                Log.Msg("beaten check");
+                AddLocationToQueue($"{StageTypeToName[GM.Core.Stage.StageType]} Beaten");
+                StagesBeaten.Add(GM.Core.Stage.StageType);
+                Client.SendToStorage("levels_completed", StagesBeaten.Select(st => StageTypeToName[st]).ToArray());
+                if (StagesBeaten.Count != StagesToBeat.Length ||
+                    Client.HasGoaled || APSurvivorClient.GoalRequirement != GoalRequirement.StageHunt) return;
+                Client.Goal();
             }
         }
-
-        if (!StagesBeaten.Contains(GM.Core.Stage.StageType))
+        catch (Exception e)
         {
-            Log.Msg("beaten check");
-            AddLocationToQueue($"{StageTypeToName[GM.Core.Stage.StageType]} Beaten");
-            StagesBeaten.Add(GM.Core.Stage.StageType);
-            Client.SendToStorage("levels_completed", StagesBeaten.Select(st => StageTypeToName[st]).ToArray());
-            if (StagesBeaten.Count != StagesToBeat.Length ||
-                Client.HasGoaled || APSurvivorClient.GoalRequirement != GoalRequirement.StageHunt) return;
-            Client.Goal();
+            Log.Error(e);
         }
     }
 }
