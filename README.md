@@ -16,6 +16,9 @@ Help support me, this and future projects on [Patreon](https://www.patreon.com/c
 > do all of your in-logic checks.
 > YOU HAVE BEEN WARNED!
 
+> [!Important]
+> When using deathlink, death killing you sends a deathlink (because idk how to detect what killed you, only that you died); Because of this it is HEAVILY recommended to use Endless for stage and character completions
+
 ## Features/Information
 
 - Goal:
