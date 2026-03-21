@@ -9,7 +9,7 @@ Help support me, this and future projects on [Patreon](https://www.patreon.com/c
 > [!Note]
 > Other mods might cause problems
 
-> [!Warning]
+> [!Caution]
 > It's advised to get a decent amount of vanilla content done beforehand, you can set what characters and stages you
 > have available to you in the yaml.
 > If you don't, you might end up receiving characters and stages you haven't unlocked yet, thus not being able to
