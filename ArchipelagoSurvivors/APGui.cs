@@ -1,15 +1,8 @@
 ﻿using ArchipelagoSurvivors.Patches;
-using Il2CppVampireSurvivors.Data;
-using Il2CppVampireSurvivors.Data.Weapons;
-using Il2CppVampireSurvivors.Framework;
-using Il2CppVampireSurvivors.Framework.Saves;
 using MelonLoader;
-using Unity.Collections;
 using UnityEngine;
 using static ArchipelagoSurvivors.APSurvivorClient;
-using static ArchipelagoSurvivors.Core;
 using static CreepyUtil.Archipelago.ArchipelagoTag;
-using Saver = Il2CppVampireSurvivors.Framework.Saves.PhaserSaveDataUtils;
 
 namespace ArchipelagoSurvivors;
 

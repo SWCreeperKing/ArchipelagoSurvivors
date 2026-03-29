@@ -88,7 +88,7 @@ public static class SurvivorScreenPatch
 
             if (stage.Type == StageType.MACHINE)
             {
-                if (APSurvivorClient.GoalRequirement == GoalRequirement.KillTheDirector)
+                if (Client!.IsGoalType(GoalRequirement.KillTheDirector))
                 {
                     stage.DescriptionText.text =
                         $"Stages beaten requirement to open:\n[{StagesBeaten.Count}] of [{StagesToBeatForDirector}]";
@@ -108,8 +108,7 @@ public static class SurvivorScreenPatch
                 {
                     rawEnemyChecksMissing = rawEnemyChecksMissing
                                            .Where(et => !EnemyHurryStages.ContainsKey(et) ||
-                                                        !EnemyHurryStages[et].Contains(stage.Type)
-                                            )
+                                                        !EnemyHurryStages[et].Contains(stage.Type))
                                            .ToArray();
                 }
 
@@ -132,8 +131,7 @@ public static class SurvivorScreenPatch
                 else { stage.DescriptionText.text = "All Chest and Enemy Checks Got!"; }
             }
 
-            if (stage.Type != StageType.MACHINE ||
-                APSurvivorClient.GoalRequirement != GoalRequirement.KillTheDirector) continue;
+            if (stage.Type != StageType.MACHINE || Client.IsGoalType(GoalRequirement.KillTheDirector)) continue;
 
             if (__instance._selectedStage == stage)
             {
@@ -150,11 +148,8 @@ public class TickBoxController
     public bool Enabled
         => VariableTracker switch
         {
-            "hurry" => !IsHurryLocked,
-            "hyper" => !IsHyperLocked,
-            "arcanas" => !IsArcanasLocked,
-            "eggs" => !IsEggesLocked,
-            _ => false,
+            "hurry" => !IsHurryLocked, "hyper" => !IsHyperLocked, "arcanas" => !IsArcanasLocked,
+            "eggs" => !IsEggesLocked, _ => false,
         };
 
     private TickBoxUI Box = null;

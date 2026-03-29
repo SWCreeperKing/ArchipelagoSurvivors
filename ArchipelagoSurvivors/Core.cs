@@ -2,7 +2,7 @@
 using Il2CppVampireSurvivors.Data;
 using MelonLoader;
 
-[assembly: MelonInfo(typeof(ArchipelagoSurvivors.Core), "ArchipelagoSurvivors", "0.3.0", "SW_CreeperKing", null)]
+[assembly: MelonInfo(typeof(ArchipelagoSurvivors.Core), "ArchipelagoSurvivors", "0.3.2", "SW_CreeperKing", null)]
 [assembly: MelonGame("poncle", "Vampire Survivors")]
 // [assembly: MelonOptionalDependencies("SurvivorModMenu")] // https://github.com/takacomic/SurvivorModMenu
 

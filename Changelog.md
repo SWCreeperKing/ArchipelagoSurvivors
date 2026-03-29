@@ -1,3 +1,15 @@
+# v0.3.2
+
+- [ApWorld] Added Yaml option: Include Arcana Enemies in Enemy Sanity, `enemysanity_arcana_enemies`
+- [ApWorld] Added Yaml option: Character Limiter, `character_pool_size`
+- [ApWorld] Added Yaml option: Stage Limiter, `stage_pool_size`
+- [ApWorld] Fixed Genya being listed as a base character
+- [ApWorld] Fixed Stage Hunt requiring 1 less stage than what you had to goal
+- [Client] Extended the deathlink grace period to be 10s
+  - if you want it extended, turn off deathlink until you get better at the game
+- [Client] Fixed beating Eudai not registering
+
+---
 # v0.3.1
 
 - [ApWorld] Fixed Enemysanity always being enabled

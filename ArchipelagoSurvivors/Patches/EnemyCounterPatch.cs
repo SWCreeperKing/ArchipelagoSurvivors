@@ -4,8 +4,6 @@ using Il2CppVampireSurvivors.Framework;
 using Il2CppVampireSurvivors.Objects.Characters;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
-using static ArchipelagoSurvivors.GoalRequirement;
-using static Il2CppVampireSurvivors.Data.EnemyType;
 
 namespace ArchipelagoSurvivors.Patches;
 
@@ -16,21 +14,26 @@ public static class EnemyCounterPatch
     private static List<EnemyType> Warnlist2 = [];
 
     [HarmonyPatch(typeof(EnemyController), "Die"), HarmonyPostfix]
-    public static void Count(EnemyController __instance)
+    public static void Count(EnemyController __instance) => EnemyDied(__instance.EnemyType);
+    
+    [HarmonyPatch(typeof(EnemyBigFuzz), "Die"), HarmonyPostfix]
+    public static void CountBigFuzz(EnemyController __instance) => EnemyDied(EnemyType.BOSS_FB_BIGFUZZ);
+
+    public static void EnemyDied(EnemyType type)
     {
         try
         {
             if (!EnemysanityEnabled) return;
 
-            var enemyName = __instance.EnemyType.GetName(out var enemyType);
+            var enemyName = type.GetName(out var enemyType);
             if (enemyName is "") return;
 
             if (!EnemyStages.ContainsKey(enemyType))
             {
-                if (Warnlist2.Contains(__instance.EnemyType)) return;
-                Warnlist2.Add(__instance.EnemyType);
+                if (Warnlist2.Contains(enemyType)) return;
+                Warnlist2.Add(enemyType);
                 Log.Error(
-                    $"Enemy: [{__instance.EnemyType}], variant of: [{enemyType}] does not show up in Enemysanity, please report"
+                    $"Enemy: [{type}], variant of: [{enemyType}] does not show up in Enemysanity, please report"
                 );
                 return;
             }
@@ -54,9 +57,7 @@ public static class EnemyCounterPatch
             }
 
             AddLocationToQueue($"Kill {enemyName}");
-
-            if (enemyType != DIRECTER || APSurvivorClient.GoalRequirement != KillTheDirector) return;
-            Client?.Goal();
+            
         }
         catch (Exception e)
         {

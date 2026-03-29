@@ -7,7 +7,6 @@ using Il2CppVampireSurvivors.UI;
 using UnityEngine;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static ArchipelagoSurvivors.Core;
-using static ArchipelagoSurvivors.Patches.EnemyCounterPatch;
 using Random = System.Random;
 
 namespace ArchipelagoSurvivors.Patches;

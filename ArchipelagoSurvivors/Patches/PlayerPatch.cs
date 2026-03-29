@@ -43,7 +43,7 @@ public class PlayerPatch
         }
 
         if (!Client!.Tags[DeathLink]) return;
-        DeathlinkCooldown = 4;
+        DeathlinkCooldown = DeathlinkCooldownTimer;
         Client?.SendDeathLink(DeathlinkMessages[Random.Shared.Next(DeathlinkMessages.Length)]);
     }
 }

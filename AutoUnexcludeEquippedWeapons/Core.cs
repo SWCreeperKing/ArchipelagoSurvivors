@@ -1,15 +1,10 @@
 ﻿using HarmonyLib;
-using Il2CppNewtonsoft.Json;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Framework;
-using Il2CppVampireSurvivors.Objects.Characters;
 using Il2CppZenject;
 using MelonLoader;
-using Microsoft.VisualBasic;
-using UnityEngine;
 using static AutoUnexcludeEquippedWeapons.Core;
 using static Il2CppVampireSurvivors.Signals.GameplaySignals;
-using Action = Il2CppSystem.Action;
 
 [assembly:
     MelonInfo(typeof(AutoUnexcludeEquippedWeapons.Core), "AutoUnexcludeEquippedWeapons", "1.0.0", "SW_CreeperKing",

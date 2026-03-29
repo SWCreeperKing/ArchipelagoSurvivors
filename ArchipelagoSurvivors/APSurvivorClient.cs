@@ -11,14 +11,12 @@ using static ArchipelagoSurvivors.Patches.SurvivorScreenPatch;
 
 namespace ArchipelagoSurvivors;
 
-public enum GoalRequirement
-{
-    StageHunt,
-    KillTheDirector
-}
+public enum GoalRequirement { StageHunt, KillTheDirector }
 
 internal static class APSurvivorClient
 {
+    public const int DeathlinkCooldownTimer = 10;
+
     private static List<string> SentAlready = [];
     private static HashSet<string> ChecksToSend = [];
     public static ConcurrentQueue<string> ChecksToSendQueue = [];
@@ -32,7 +30,6 @@ internal static class APSurvivorClient
     public static bool IsEggesLocked = false;
     public static bool EnemysanityEnabled = false;
     public static long ChestCheckAmount;
-    public static GoalRequirement GoalRequirement;
     public static double DeathlinkCooldown;
     public static long StagesToBeatForDirector = 0;
 
@@ -46,10 +43,8 @@ internal static class APSurvivorClient
             Client = new ApClient(new TimeSpan(0, 1, 0));
             Log.Msg($"Attempting to connect [{address}]:[{port}] [{password}] [{slot}]");
 
-            var connectError = Client.TryConnect(
-                new LoginInfo(port, slot, address, password), "Vampire Survivors",
-                ItemsHandlingFlags.AllItems, requestSlotData: true
-            );
+            var connectError = Client.TryConnect(new LoginInfo(port, slot, address, password), "Vampire Survivors",
+                ItemsHandlingFlags.AllItems, requestSlotData: true);
 
             if (connectError is not null && connectError.Length > 0)
             {
@@ -107,35 +102,34 @@ internal static class APSurvivorClient
                                   .ToList();
 
             EnemysanityEnabled = slotdata.TryGetValue("enemysanity", out var enemysanity) && (bool)enemysanity;
-            GoalRequirement = (GoalRequirement)(slotdata.TryGetValue("goal_requirement", out var goalrequirement)
-                ? (long)goalrequirement
-                : 0);
+            Client!.SetGoalType((GoalRequirement)(slotdata.TryGetValue("goal_requirement", out var goalrequirement)
+                ? (long)goalrequirement : 0));
 
             StagesToBeatForDirector = slotdata.TryGetValue("ending_stage_count", out var goalstagerequirement)
                 ? (long)goalstagerequirement
                 : 0;
 
-            Log.Msg(
-                $"""
-                 StartingStage: [{StartingStage}]
-                 StartingCharacter: [{StartingCharacter}]
-                 StagesToBeat: [{StagesToBeat.Length}]
-                 IsHyperLocked: [{IsHyperLocked}]
-                 IsHurryLocked: [{IsHurryLocked}]
-                 IsArcanasLocked: [{IsArcanasLocked}]
-                 IsEggesLocked: [{IsEggesLocked}]
-                 ChestCheckAmount: [{ChestCheckAmount}]
-                 CharactersBeaten: [{CharactersBeaten.Count}]
-                 StagesBeaten: [{StagesBeaten.Count}]
-                 EnemysanityEnabled: [{EnemysanityEnabled}]
-                 GoalRequirement: [{GoalRequirement}]
-                 StagesToBeatForDirector: [{StagesToBeatForDirector}]
-                 """
-            );
+            Log.Msg($"""
+                     StartingStage: [{StartingStage}]
+                     StartingCharacter: [{StartingCharacter}]
+                     StagesToBeat: [{StagesToBeat.Length}]
+                     IsHyperLocked: [{IsHyperLocked}]
+                     IsHurryLocked: [{IsHurryLocked}]
+                     IsArcanasLocked: [{IsArcanasLocked}]
+                     IsEggesLocked: [{IsEggesLocked}]
+                     ChestCheckAmount: [{ChestCheckAmount}]
+                     CharactersBeaten: [{CharactersBeaten.Count}]
+                     StagesBeaten: [{StagesBeaten.Count}]
+                     EnemysanityEnabled: [{EnemysanityEnabled}]
+                     GoalRequirement: [{Client.GetGoalTypeAsEnum<GoalRequirement>()}]
+                     StagesToBeatForDirector: [{StagesToBeatForDirector}]
+                     """);
 
-            if (StagesToBeat.Length > StagesBeaten.Count && GoalRequirement is GoalRequirement.StageHunt)
+            if (StagesToBeat.Length > StagesBeaten.Count
+                && Client.GetGoalTypeAsEnum<GoalRequirement>() is GoalRequirement.StageHunt)
             {
-                Log.Msg($"Stages left to beat: \n - {string.Join("\n - ", StagesToBeat.Except(StagesBeaten))}");
+                Log.Msg(
+                    $"Stages left to beat: \n - {string.Join("\n - ", StagesToBeat.Except(StagesBeaten).Select(t => StageTypeToName[t]))}");
             }
 
             foreach (var stage in StagesBeaten) { AddLocationToQueue($"{StageTypeToName[stage]} Beaten"); }
@@ -160,7 +154,7 @@ internal static class APSurvivorClient
                     return;
                 }
 
-                DeathlinkCooldown = 4;
+                DeathlinkCooldown = DeathlinkCooldownTimer;
                 DeathIsQueued = true;
                 GM.Core.Player.Kill();
             };
@@ -172,10 +166,7 @@ internal static class APSurvivorClient
         Log.Msg("Connected");
     }
 
-    public static bool IsConnected()
-    {
-        return Client is not null && Client.IsConnected;
-    }
+    public static bool IsConnected() { return Client is not null && Client.IsConnected; }
 
     public static void Update()
     {
@@ -195,45 +186,28 @@ internal static class APSurvivorClient
                           .Select(item => item?.ItemName!)
                           .ToArray();
 
-            AllowedCharacters.AddRange(
-                GetCompatibilityConversion(
-                    "character",
-                    newItems.Where(s => s.StartsWith("Character Unlock: ")).Select(s => s[18..]).ToArray(),
-                    CharacterNameToType, ref updateCompatibilityTxt
-                )
-            );
+            AllowedCharacters.AddRange(GetCompatibilityConversion("character",
+                newItems.Where(s => s.StartsWith("Character Unlock: ")).Select(s => s[18..]).ToArray(),
+                CharacterNameToType, ref updateCompatibilityTxt));
 
-            AllowedStages.AddRange(
-                GetCompatibilityConversion(
-                    "stage",
-                    newItems.Where(s => s.StartsWith("Stage Unlock: ")).Select(s => s[14..]).ToArray(),
-                    StageNameToType, ref updateCompatibilityTxt
-                )
-            );
+            AllowedStages.AddRange(GetCompatibilityConversion("stage",
+                newItems.Where(s => s.StartsWith("Stage Unlock: ")).Select(s => s[14..]).ToArray(),
+                StageNameToType, ref updateCompatibilityTxt));
 
             if (updateCompatibilityTxt)
             {
-                File.WriteAllLines(
-                    $"{DataFolder}/Compatibility.txt", CompatibilityConversions.Select(kv => $"{kv.Key} = {kv.Value}")
-                );
+                File.WriteAllLines($"{DataFolder}/Compatibility.txt",
+                    CompatibilityConversions.Select(kv => $"{kv.Key} = {kv.Value}"));
             }
 
             foreach (var gamemode in newItems.Where(s => s.StartsWith("Gamemode Unlock: ")).Select(s => s[17..]))
             {
                 switch (gamemode)
                 {
-                    case "Hurry":
-                        IsHurryLocked = false;
-                        break;
-                    case "Hyper":
-                        IsHyperLocked = false;
-                        break;
-                    case "Arcanas":
-                        IsArcanasLocked = false;
-                        break;
-                    case "Eggs":
-                        IsEggesLocked = false;
-                        break;
+                    case "Hurry": IsHurryLocked = false; break;
+                    case "Hyper": IsHyperLocked = false; break;
+                    case "Arcanas": IsArcanasLocked = false; break;
+                    case "Eggs": IsEggesLocked = false; break;
                 }
             }
         }
@@ -272,8 +246,7 @@ internal static class APSurvivorClient
                 }
 
                 Log.Error(
-                    $"Value [{item}] is an incompatible {kind} name, goto [Vampire Survivors/Mods/SW_CreeperKing.ArchipelagoSurvivors/Data/Compatibility.txt] to fill out the correct name (restart the game to apply)"
-                );
+                    $"Value [{item}] is an incompatible {kind} name, goto [Vampire Survivors/Mods/SW_CreeperKing.ArchipelagoSurvivors/Data/Compatibility.txt] to fill out the correct name (restart the game to apply)");
                 CompatibilityConversions[item] = "";
                 updateCompatibilityTxt = true;
             }
