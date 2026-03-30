@@ -64,6 +64,18 @@ Help support me, this and future projects on [Patreon](https://www.patreon.com/c
 
 ---
 
+## DeathLinks will only send when you click the revive button instead of just when the player dies
+- Cons:
+  - The final death in a run doesn't send a DeathLink
+  - Can't send a DeathLink if you don't have revives
+- Pros:
+  - Choose to Quit a run or send a DeathLink and Revive
+  - Warn other DeathLinkers about sending a DeathLink
+  - GateKeeping DeathLinks behind game progression
+  - Prevents DeathLinks being sent from people who don't use endless
+
+---
+
 # Special Thanks
 
 - Sterlia for being my 'logic slave'
