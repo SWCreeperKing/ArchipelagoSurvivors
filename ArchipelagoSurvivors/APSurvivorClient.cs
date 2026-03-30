@@ -20,7 +20,7 @@ internal static class APSurvivorClient
     private static List<string> SentAlready = [];
     private static HashSet<string> ChecksToSend = [];
     public static ConcurrentQueue<string> ChecksToSendQueue = [];
-    public static ApClient? Client;
+    public static ApClient Client = new(new TimeSpan(0, 1, 0));
     public static CharacterType StartingCharacter;
     public static StageType StartingStage;
     public static StageType[] StagesToBeat;
@@ -35,12 +35,110 @@ internal static class APSurvivorClient
 
     private static double NextSend = 4;
 
+    public static void Init()
+    {
+        Client.OnConnectionEvent += _ =>
+        {
+            try
+            {
+                var slotdata = Client.SlotData!;
+                StartingStage = StageNameToType[(string)slotdata["starting_stage"]];
+                StartingCharacter = CharacterNameToType[(string)slotdata["starting_character"]];
+
+                StagesToBeat = ((string)slotdata["stages_to_beat"]).Split(',')
+                                                                   .Select(s => s.Trim('\'', '[', ']', ' ', '"'))
+                                                                   .Select(s => StageNameToType[s])
+                                                                   .ToArray();
+
+                IsHyperLocked = (bool)slotdata["is_hyper_locked"];
+                IsHurryLocked = (bool)slotdata["is_hurry_locked"];
+                IsArcanasLocked = (bool)slotdata["is_arcanas_locked"];
+                IsEggesLocked = (long)slotdata["egg_inclusion"] != 2;
+                ChestCheckAmount = (long)slotdata["chest_checks_per_stage"];
+
+                AllowedStages.Add(StartingStage);
+                AllowedCharacters.Add(StartingCharacter);
+
+                CharactersBeaten = Client.GetFromStorage<string[]>("characters_completed", def: [])
+                                          .Select(s => CharacterNameToType[s])
+                                          .ToList();
+                
+                StagesBeaten = Client.GetFromStorage<string[]>("levels_completed", def: [])
+                                      .Select(s => StageNameToType[s])
+                                      .ToList();
+
+                EnemysanityEnabled = slotdata.TryGetValue("enemysanity", out var enemysanity) && (bool)enemysanity;
+                Client.SetGoalType((GoalRequirement)(slotdata.TryGetValue("goal_requirement", out var goalrequirement)
+                    ? (long)goalrequirement : 0));
+
+                StagesToBeatForDirector = slotdata.TryGetValue("ending_stage_count", out var goalstagerequirement)
+                    ? (long)goalstagerequirement
+                    : 0;
+
+                Log.Msg($"""
+                         StartingStage: [{StartingStage}]
+                         StartingCharacter: [{StartingCharacter}]
+                         StagesToBeat: [{StagesToBeat.Length}]
+                         IsHyperLocked: [{IsHyperLocked}]
+                         IsHurryLocked: [{IsHurryLocked}]
+                         IsArcanasLocked: [{IsArcanasLocked}]
+                         IsEggesLocked: [{IsEggesLocked}]
+                         ChestCheckAmount: [{ChestCheckAmount}]
+                         CharactersBeaten: [{CharactersBeaten.Count}]
+                         StagesBeaten: [{StagesBeaten.Count}]
+                         EnemysanityEnabled: [{EnemysanityEnabled}]
+                         GoalRequirement: [{Client.GetGoalTypeAsEnum<GoalRequirement>()}]
+                         StagesToBeatForDirector: [{StagesToBeatForDirector}]
+                         """);
+
+                if (StagesToBeat.Length > StagesBeaten.Count
+                    && Client.GetGoalTypeAsEnum<GoalRequirement>() is GoalRequirement.StageHunt)
+                {
+                    Log.Msg(
+                        $"Stages left to beat: \n - {string.Join("\n - ", StagesToBeat.Except(StagesBeaten).Select(t => StageTypeToName[t]))}");
+                }
+
+                foreach (var stage in StagesBeaten) { AddLocationToQueue($"{StageTypeToName[stage]} Beaten"); }
+
+            }
+            catch (Exception e) { Log.Error(e); }
+
+            Log.Msg("Connected");
+        };
+        
+        Client.OnDeathLinkPacketReceived += (group, source, cause) =>
+        {
+            if (GM.Core?.Player is null) return;
+
+            if (source == Client?.PlayerName) return;
+
+            Log.Msg($"Received Deathlink from [{source}] for \n[{cause}]");
+
+            if (GM.Core.IsPaused)
+            {
+                Log.Msg("Deathlink was parried by pause (DON'T ABUSE)");
+                return;
+            }
+
+            if (DeathlinkCooldown > 0)
+            {
+                Log.Msg("Deathlink on cooldown");
+                return;
+            }
+
+            DeathlinkCooldown = DeathlinkCooldownTimer;
+            DeathIsQueued = true;
+            GM.Core.Player.Kill();
+        };
+        
+        Client.ItemsSentNotification += str => Log.Msg(ConsoleColor.DarkGray, $"Check Sent: [{str}]");
+    }
+
     public static string[]? TryConnect(int port, string slot, string address, string password)
     {
         try
         {
             SentAlready.Clear();
-            Client = new ApClient(new TimeSpan(0, 1, 0));
             Log.Msg($"Attempting to connect [{address}]:[{port}] [{password}] [{slot}]");
 
             var connectError = Client.TryConnect(new LoginInfo(port, slot, address, password), "Vampire Survivors",
@@ -52,8 +150,6 @@ internal static class APSurvivorClient
                 Disconnect();
                 return connectError;
             }
-
-            HasConnected();
         }
         catch (Exception e)
         {
@@ -67,106 +163,9 @@ internal static class APSurvivorClient
 
     public static void Disconnect()
     {
-        Client?.TryDisconnect();
-        Client = null;
+        Client.TryDisconnect();
         Log.Msg("Disconnected");
     }
-
-    public static void HasConnected()
-    {
-        try
-        {
-            var slotdata = Client?.SlotData!;
-            StartingStage = StageNameToType[(string)slotdata["starting_stage"]];
-            StartingCharacter = CharacterNameToType[(string)slotdata["starting_character"]];
-
-            StagesToBeat = ((string)slotdata["stages_to_beat"]).Split(',')
-                                                               .Select(s => s.Trim('\'', '[', ']', ' ', '"'))
-                                                               .Select(s => StageNameToType[s])
-                                                               .ToArray();
-
-            IsHyperLocked = (bool)slotdata["is_hyper_locked"];
-            IsHurryLocked = (bool)slotdata["is_hurry_locked"];
-            IsArcanasLocked = (bool)slotdata["is_arcanas_locked"];
-            IsEggesLocked = (long)slotdata["egg_inclusion"] != 2;
-            ChestCheckAmount = (long)slotdata["chest_checks_per_stage"];
-
-            AllowedStages.Add(StartingStage);
-            AllowedCharacters.Add(StartingCharacter);
-
-            CharactersBeaten = Client!.GetFromStorage<string[]>("characters_completed", def: [])
-                                      .Select(s => CharacterNameToType[s])
-                                      .ToList();
-            StagesBeaten = Client!.GetFromStorage<string[]>("levels_completed", def: [])
-                                  .Select(s => StageNameToType[s])
-                                  .ToList();
-
-            EnemysanityEnabled = slotdata.TryGetValue("enemysanity", out var enemysanity) && (bool)enemysanity;
-            Client!.SetGoalType((GoalRequirement)(slotdata.TryGetValue("goal_requirement", out var goalrequirement)
-                ? (long)goalrequirement : 0));
-
-            StagesToBeatForDirector = slotdata.TryGetValue("ending_stage_count", out var goalstagerequirement)
-                ? (long)goalstagerequirement
-                : 0;
-
-            Log.Msg($"""
-                     StartingStage: [{StartingStage}]
-                     StartingCharacter: [{StartingCharacter}]
-                     StagesToBeat: [{StagesToBeat.Length}]
-                     IsHyperLocked: [{IsHyperLocked}]
-                     IsHurryLocked: [{IsHurryLocked}]
-                     IsArcanasLocked: [{IsArcanasLocked}]
-                     IsEggesLocked: [{IsEggesLocked}]
-                     ChestCheckAmount: [{ChestCheckAmount}]
-                     CharactersBeaten: [{CharactersBeaten.Count}]
-                     StagesBeaten: [{StagesBeaten.Count}]
-                     EnemysanityEnabled: [{EnemysanityEnabled}]
-                     GoalRequirement: [{Client.GetGoalTypeAsEnum<GoalRequirement>()}]
-                     StagesToBeatForDirector: [{StagesToBeatForDirector}]
-                     """);
-
-            if (StagesToBeat.Length > StagesBeaten.Count
-                && Client.GetGoalTypeAsEnum<GoalRequirement>() is GoalRequirement.StageHunt)
-            {
-                Log.Msg(
-                    $"Stages left to beat: \n - {string.Join("\n - ", StagesToBeat.Except(StagesBeaten).Select(t => StageTypeToName[t]))}");
-            }
-
-            foreach (var stage in StagesBeaten) { AddLocationToQueue($"{StageTypeToName[stage]} Beaten"); }
-
-            Client!.OnDeathLinkPacketReceived += (source, cause) =>
-            {
-                if (GM.Core?.Player is null) return;
-
-                if (source == Client.PlayerName) return;
-
-                Log.Msg($"Received Deathlink from [{source}] for \n[{cause}]");
-
-                if (GM.Core.IsPaused)
-                {
-                    Log.Msg("Deathlink was parried by pause (DON'T ABUSE)");
-                    return;
-                }
-
-                if (DeathlinkCooldown > 0)
-                {
-                    Log.Msg("Deathlink on cooldown");
-                    return;
-                }
-
-                DeathlinkCooldown = DeathlinkCooldownTimer;
-                DeathIsQueued = true;
-                GM.Core.Player.Kill();
-            };
-
-            Client!.ItemsSentNotification += str => Log.Msg(ConsoleColor.DarkGray, $"Check Sent: [{str}]");
-        }
-        catch (Exception e) { Log.Error(e); }
-
-        Log.Msg("Connected");
-    }
-
-    public static bool IsConnected() { return Client is not null && Client.IsConnected; }
 
     public static void Update()
     {

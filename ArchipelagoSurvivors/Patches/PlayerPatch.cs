@@ -1,5 +1,6 @@
 using HarmonyLib;
 using Il2CppVampireSurvivors.Data;
+using Il2CppVampireSurvivors.UI;
 using static ArchipelagoSurvivors.APSurvivorClient;
 using static CreepyUtil.Archipelago.ArchipelagoTag;
 using CharacterController = Il2CppVampireSurvivors.Objects.Characters.CharacterController;
@@ -33,8 +34,9 @@ public class PlayerPatch
         DeathIsQueued = false;
     }
 
-    [HarmonyPatch(typeof(CharacterController), "OnDeath"), HarmonyPostfix]
-    public static void OnDeath(CharacterController __instance)
+    // [HarmonyPatch(typeof(CharacterController), "OnDeath"), HarmonyPostfix]
+    [HarmonyPatch(typeof(GameOverPage), "Revive"), HarmonyPostfix]
+    public static void OnDeath()
     {
         if (DeathIsQueued || DeathlinkCooldown > 0)
         {
@@ -42,8 +44,8 @@ public class PlayerPatch
             return;
         }
 
-        if (!Client!.Tags[DeathLink]) return;
+        if (!Client.Tags[DeathLink]) return;
         DeathlinkCooldown = DeathlinkCooldownTimer;
-        Client?.SendDeathLink(DeathlinkMessages[Random.Shared.Next(DeathlinkMessages.Length)]);
+        Client.SendDeathLink(DeathlinkMessages[Random.Shared.Next(DeathlinkMessages.Length)]);
     }
 }

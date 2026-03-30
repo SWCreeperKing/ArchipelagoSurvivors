@@ -1,5 +1,6 @@
 ﻿using ArchipelagoSurvivors.Patches;
 using Il2CppVampireSurvivors.Data;
+using Il2CppVampireSurvivors.UI;
 using MelonLoader;
 
 [assembly: MelonInfo(typeof(ArchipelagoSurvivors.Core), "ArchipelagoSurvivors", "0.3.2", "SW_CreeperKing", null)]
@@ -30,6 +31,7 @@ public class Core : MelonMod
     public override void OnInitializeMelon()
     {
         Log = LoggerInstance;
+        APSurvivorClient.Init();
 
         if (File.Exists("debug.txt")) Debug = int.Parse(File.ReadAllText("debug.txt"));
 

@@ -1,7 +1,7 @@
-﻿using ArchipelagoSurvivors.Patches;
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using static ArchipelagoSurvivors.APSurvivorClient;
+using static ArchipelagoSurvivors.Patches.MainMenuPatch;
 using static CreepyUtil.Archipelago.ArchipelagoTag;
 
 namespace ArchipelagoSurvivors;
@@ -14,59 +14,33 @@ public class APGui : MonoBehaviour
     public static string IpPorttext = "archipelago.gg:12345";
     public static string Password = "";
     public static string Slot = "Survivor";
+    public static string DeathLinkGroup = "";
+    public static bool EnabledDeathLink = false;
     public static string State = "";
     public static Vector2 Offset = new(100, 100);
-    private static double TimeAccumulator;
-    private static double DeathlinkToggleTimer;
 
-    public static GUIStyle TextStyle = new()
-    {
-        fontSize = 12,
-        normal =
-        {
-            textColor = Color.white
-        }
-    };
+    public static GUIStyle TextStyle = new() { fontSize = 12, normal = { textColor = Color.white } };
 
-    public static GUIStyle TextStyleGreen = new()
-    {
-        fontSize = 12,
-        normal =
-        {
-            textColor = Color.green
-        }
-    };
+    public static GUIStyle TextStyleGreen = new() { fontSize = 12, normal = { textColor = Color.green } };
 
-    public static GUIStyle TextStyleRed = new()
-    {
-        fontSize = 12,
-        normal =
-        {
-            textColor = Color.red
-        }
-    };
+    public static GUIStyle TextStyleRed = new() { fontSize = 12, normal = { textColor = Color.red } };
 
     private void Awake()
     {
         if (!File.Exists("ApConnection.txt")) return;
-        var fileText = File.ReadAllText("ApConnection.txt").Replace("\r", "").Split('\n');
+        var fileText = File.ReadAllLines("ApConnection.txt");
         IpPorttext = fileText[0];
         Password = fileText[1];
         Slot = fileText[2];
+        if (fileText.Length > 3) DeathLinkGroup = fileText[3];
+        if (fileText.Length > 4) EnabledDeathLink = fileText[4].ToLower()[0] == 't';
     }
 
     void OnGUI()
     {
-        TimeAccumulator += Time.deltaTime;
-
-        if (DeathlinkToggleTimer > 0)
-        {
-            DeathlinkToggleTimer -= Time.deltaTime;
-        }
-
         if (!ShowGUI) return;
 
-        if (!IsConnected())
+        if (!Client.IsConnected)
         {
             GUI.Box(new Rect(10 + Offset.x, 10 + Offset.y, 200, 300), "AP Client");
 
@@ -81,28 +55,39 @@ public class APGui : MonoBehaviour
         }
         else
         {
-            GUI.Box(new Rect(10 + Offset.x, 10 + Offset.y + 100, 200, 150), "AP Client");
-            if (DeathlinkToggleTimer <= 0 && GUI.Button(new Rect(10 + Offset.x, 10 + Offset.y + 130, 200, 50), "Toggle Deathlink"))
+            if (EnabledDeathLink != Client.Tags[DeathLink])
             {
-                DeathlinkToggleTimer = 3;
-                Client?.Tags.ToggleDeathLink();
+                Client.DeathLinkGroups.Clear();
+                Client.DeathLinkGroups.Add(DeathLinkGroup);
+                Core.Log.Msg(
+                    $"{EnabledDeathLink} != {Client.Tags[DeathLink]} ([{string.Join(", ", Client.Tags.GetTagsAsStrings())}])");
+                Client.Tags.ToggleDeathLink();
             }
 
-            GUI.Label(new Rect(10 + Offset.x, 10 + Offset.y + 180, 200, 50),
-                Client!.Tags[DeathLink] ? "Deathlink is enabled" : "Deathlink is disabled", TextStyle);
+            GUI.Box(new Rect(10 + Offset.x, 10 + Offset.y + 100, 200, 150), "AP Client");
+            GUI.Label(new Rect(20 + Offset.x, 140 + Offset.y, 300, 30), "DeathLink Group", TextStyle);
+            DeathLinkGroup = GUI.TextField(new Rect(20 + Offset.x, 160 + Offset.y, 180, 25), DeathLinkGroup, 25);
+
+            var deathLink = GUI.Toggle(new Rect(20 + Offset.x, 190 + Offset.y, 180, 30), EnabledDeathLink,
+                "Toggle Deathlink");
+            if (deathLink != EnabledDeathLink)
+            {
+                if (deathLink)
+                {
+                    Client.DeathLinkGroups.Clear();
+                    Client.DeathLinkGroups.Add(DeathLinkGroup);
+                }
+
+                Client.Tags.ToggleDeathLink();
+                EnabledDeathLink = !EnabledDeathLink;
+                SaveData();
+            }
         }
 
-        if (MainMenuPatch.StartButton is not null)
-        {
-            MainMenuPatch.StartButton.gameObject.SetActive(IsConnected());
-        }
+        StartButton?.gameObject.SetActive(Client.IsConnected);
+        BestiaryButton?.gameObject.SetActive(Client.IsConnected && EnemysanityEnabled);
 
-        if (MainMenuPatch.BestiaryButton is not null)
-        {
-            MainMenuPatch.BestiaryButton.gameObject.SetActive(IsConnected() && EnemysanityEnabled);
-        }
-        
-        if (!IsConnected() && GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 180, 30), "Connect"))
+        if (!Client.IsConnected && GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 180, 30), "Connect"))
         {
             var ipPortSplit = IpPorttext.Split(':');
             if (!int.TryParse(ipPortSplit[1], out var port))
@@ -116,22 +101,29 @@ public class APGui : MonoBehaviour
             if (error is not null)
             {
                 State = string.Join("\n", error);
+                Core.Log.Error(State);
                 return;
             }
 
             State = "";
-            File.WriteAllText("ApConnection.txt", $"{IpPorttext}\n{Password}\n{Slot}");
-            TimeAccumulator = 0;
+            SaveData();
         }
 
-        if (IsConnected() && GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 180, 30), "Disconnect"))
+        if (Client.IsConnected && GUI.Button(new Rect(20 + Offset.x, 210 + Offset.y, 180, 30), "Disconnect"))
         {
             Disconnect();
-            File.WriteAllLines("ENEMY NAME TYPES.txt", MainMenuPatch.Names.Select(kv => $"{(kv.Value.Contains(',') ? $"\"{kv.Value}\"" : kv.Value)}, {kv.Key}"));
+            File.WriteAllLines("ENEMY NAME TYPES.txt",
+                Names.Select(kv => $"{(kv.Value.Contains(',') ? $"\"{kv.Value}\"" : kv.Value)}, {kv.Key}"));
         }
 
         GUI.Label(new Rect(20 + Offset.x, 240 + Offset.y, 300, 30),
-            State != "" ? State : IsConnected() ? "Connected" : "Not Connected",
-            IsConnected() ? TextStyleGreen : TextStyleRed);
+            State != "" ? State : Client.IsConnected ? "Connected" : "Not Connected",
+            Client.IsConnected ? TextStyleGreen : TextStyleRed);
+    }
+
+    public static void SaveData()
+    {
+        File.WriteAllText("ApConnection.txt",
+            $"{IpPorttext}\n{Password}\n{Slot}\n{DeathLinkGroup}\n{EnabledDeathLink}");
     }
 }

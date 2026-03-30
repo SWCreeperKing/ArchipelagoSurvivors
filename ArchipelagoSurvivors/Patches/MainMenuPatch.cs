@@ -22,19 +22,20 @@ public static class MainMenuPatch
     [HarmonyPatch(typeof(MainMenuPage), "Start"), HarmonyPostfix]
     public static void HideButtons(MainMenuPage __instance)
     {
-        var container = __instance.GetChild(5);
+        var container = GameObject.Find("UI/Canvas - App/Safe Area/View - Main Menu/ButtonContainer");
         StartButton = container.GetChild(0);
         BestiaryButton = container.GetChild(6);
-        
+
         if (Random.Shared.Next(100) == 42)
         {
             StartButton.GetChild(0).GetComponent<TextMeshProUGUI>().text = "FISH";
             Log.Msg("FISH");
         }
-        
+
         container.GetChild(1).AddComponent<Invisinator>(); // quick start button
         container.GetChild(2).AddComponent<Invisinator>(); // online button
         container.GetChild(13).AddComponent<Invisinator>(); // adventure button
+
         __instance.gameObject.AddComponent<APGui>();
     }
 
@@ -50,22 +51,20 @@ public static class MainMenuPatch
         BestiaryPage page, bool hasKilled)
     {
         try
-        {;
+        {
+            ;
             var enemyName = __instance._type.GetName(out var enemyType);
             if (enemyName is "") return;
             __instance.gameObject.SetActive(false);
 
             if (Unknown is not null && Unknown.Contains(enemyType)) Names[enemyType] = __instance._Name.text;
             if (Client is null) return;
-            
+
             if (!EnemysanityEnabled) return;
             var killed = !Client.MissingLocations.Contains($"Kill {enemyName}");
             __instance._Name.text = $"[Unkilled] {__instance._Name.text}";
             __instance.gameObject.SetActive(!killed);
         }
-        catch(Exception e)
-        {
-            Log.Msg(e);
-        }
+        catch (Exception e) { Log.Msg(e); }
     }
 }
