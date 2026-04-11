@@ -1,3 +1,8 @@
+# v0.3.4
+
+- [ApWorld] Fixed UT variables being swapped (sorry about that)
+- [ApWorld] Fixed bug with Director goal and being able to 'beat' eudai before you can reach eudai 
+
 # v0.3.3
 
 - [Client] Fixed UI not behaving on Epic Games build of the game
