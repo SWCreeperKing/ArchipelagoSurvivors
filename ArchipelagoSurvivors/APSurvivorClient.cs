@@ -37,6 +37,54 @@ internal static class APSurvivorClient
 
     public static void Init()
     {
+        Client.ItemHandlerInitialized += handler =>
+        {
+            handler.OnNewItemsReceived += (items, _) =>
+            {
+                if (!items.Any()) return;
+                var updateCompatibilityTxt = false;
+                var newItems = items
+                              .Select(item => item?.ItemName!)
+                              .ToArray();
+
+                AllowedCharacters.AddRange(
+                    GetCompatibilityConversion(
+                        "character",
+                        newItems.Where(s => s.StartsWith("Character Unlock: ")).Select(s => s[18..]).ToArray(),
+                        CharacterNameToType, ref updateCompatibilityTxt
+                    )
+                );
+
+                AllowedStages.AddRange(
+                    GetCompatibilityConversion(
+                        "stage",
+                        newItems.Where(s => s.StartsWith("Stage Unlock: ")).Select(s => s[14..]).ToArray(),
+                        StageNameToType, ref updateCompatibilityTxt
+                    )
+                );
+
+                if (updateCompatibilityTxt)
+                {
+                    File.WriteAllLines(
+                        $"{DataFolder}/Compatibility.txt",
+                        CompatibilityConversions.Select(kv => $"{kv.Key} = {kv.Value}")
+                    );
+                }
+
+                foreach (var gamemode in newItems.Where(s => s.StartsWith("Gamemode Unlock: "))
+                                                 .Select(s => s[17..]))
+                {
+                    switch (gamemode)
+                    {
+                        case "Hurry": IsHurryLocked = false; break;
+                        case "Hyper": IsHyperLocked = false; break;
+                        case "Arcanas": IsArcanasLocked = false; break;
+                        case "Eggs": IsEggesLocked = false; break;
+                    }
+                }
+            };
+        };
+        
         Client.OnConnectionEvent += _ =>
         {
             try
@@ -50,9 +98,9 @@ internal static class APSurvivorClient
                                                                    .Select(s => StageNameToType[s])
                                                                    .ToArray();
 
-                IsHyperLocked = (bool)slotdata["is_hyper_locked"];
-                IsHurryLocked = (bool)slotdata["is_hurry_locked"];
-                IsArcanasLocked = (bool)slotdata["is_arcanas_locked"];
+                IsHyperLocked = (bool)slotdata[slotdata.ContainsKey("is_hyper_locked") ? "is_hyper_locked" : "lock_hyper_behind_item"];
+                IsHurryLocked = (bool)slotdata[slotdata.ContainsKey("is_hurry_locked") ? "is_hurry_locked" : "lock_hurry_behind_item"];
+                IsArcanasLocked = (bool)slotdata[slotdata.ContainsKey("is_arcanas_locked") ? "is_arcanas_locked" : "lock_arcanas_behind_item"];
                 IsEggesLocked = (long)slotdata["egg_inclusion"] != 2;
                 ChestCheckAmount = (long)slotdata["chest_checks_per_stage"];
 
@@ -177,40 +225,8 @@ internal static class APSurvivorClient
         if (DeathlinkCooldown > 0) DeathlinkCooldown -= Time.deltaTime;
         if (ChecksToSend.Any() && NextSend <= 0) { SendChecks(); }
 
-        var rawNewItems = Client.GetOutstandingItems().ToArray();
-        if (rawNewItems.Any())
-        {
-            var updateCompatibilityTxt = false;
-            var newItems = rawNewItems
-                          .Select(item => item?.ItemName!)
-                          .ToArray();
-
-            AllowedCharacters.AddRange(GetCompatibilityConversion("character",
-                newItems.Where(s => s.StartsWith("Character Unlock: ")).Select(s => s[18..]).ToArray(),
-                CharacterNameToType, ref updateCompatibilityTxt));
-
-            AllowedStages.AddRange(GetCompatibilityConversion("stage",
-                newItems.Where(s => s.StartsWith("Stage Unlock: ")).Select(s => s[14..]).ToArray(),
-                StageNameToType, ref updateCompatibilityTxt));
-
-            if (updateCompatibilityTxt)
-            {
-                File.WriteAllLines($"{DataFolder}/Compatibility.txt",
-                    CompatibilityConversions.Select(kv => $"{kv.Key} = {kv.Value}"));
-            }
-
-            foreach (var gamemode in newItems.Where(s => s.StartsWith("Gamemode Unlock: ")).Select(s => s[17..]))
-            {
-                switch (gamemode)
-                {
-                    case "Hurry": IsHurryLocked = false; break;
-                    case "Hyper": IsHyperLocked = false; break;
-                    case "Arcanas": IsArcanasLocked = false; break;
-                    case "Eggs": IsEggesLocked = false; break;
-                }
-            }
-        }
-
+        Client.UpdateItemHandler();
+        
         while (!ChecksToSendQueue.IsEmpty)
         {
             ChecksToSendQueue.TryDequeue(out var location);
@@ -219,39 +235,38 @@ internal static class APSurvivorClient
 
         return;
 
-        T[] GetCompatibilityConversion<T>(
-            string kind, string[] potentialItems, Dictionary<string, T> converter, ref bool updateCompatibilityTxt
-        )
-        {
-            List<T> newItems = [];
+    }
 
-            foreach (var item in potentialItems)
+    private static T[] GetCompatibilityConversion<T>(string kind, string[] potentialItems, Dictionary<string, T> converter, ref bool updateCompatibilityTxt)
+    {
+        List<T> newItems = [];
+
+        foreach (var item in potentialItems)
+        {
+            if (converter.TryGetValue(item, out var value1))
             {
-                if (converter.TryGetValue(item, out var value1))
+                newItems.Add(value1);
+                continue;
+            }
+
+            if (CompatibilityConversions.TryGetValue(item, out var value2) && value2 is not "")
+            {
+                if (converter.TryGetValue(value2, out var value3))
                 {
-                    newItems.Add(value1);
+                    newItems.Add(value3);
                     continue;
                 }
 
-                if (CompatibilityConversions.TryGetValue(item, out var value2) && value2 is not "")
-                {
-                    if (converter.TryGetValue(value2, out var value3))
-                    {
-                        newItems.Add(value3);
-                        continue;
-                    }
-
-                    Log.Error($"Value [{value2}] is an incorrect {kind} name");
-                }
-
-                Log.Error(
-                    $"Value [{item}] is an incompatible {kind} name, goto [Vampire Survivors/Mods/SW_CreeperKing.ArchipelagoSurvivors/Data/Compatibility.txt] to fill out the correct name (restart the game to apply)");
-                CompatibilityConversions[item] = "";
-                updateCompatibilityTxt = true;
+                Log.Error($"Value [{value2}] is an incorrect {kind} name");
             }
 
-            return newItems.ToArray();
+            Log.Error(
+                $"Value [{item}] is an incompatible {kind} name, goto [Vampire Survivors/Mods/SW_CreeperKing.ArchipelagoSurvivors/Data/Compatibility.txt] to fill out the correct name (restart the game to apply)");
+            CompatibilityConversions[item] = "";
+            updateCompatibilityTxt = true;
         }
+
+        return newItems.ToArray();
     }
 
     private static void SendChecks()
